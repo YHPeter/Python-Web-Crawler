@@ -7,7 +7,7 @@ def getHTMLText(url):
         web_page = urllib.request.urlopen(req)
         return web_page.read().decode('utf-8')
     except:
-        return "产生异常"
+        return "Error"
 if __name__=="__main__":
-    url ="http://www.baidu.com"
+    url ="www.google.com"
     print(getHTMLText(url))
