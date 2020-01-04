@@ -1,6 +1,6 @@
 # Python-Spider
-
-1. The spider programme is disigned for catching one complete novel with searching function by name of novel or writer.
-2. The same function as the first one, however change another website.
-3. CIE pastpaper catching online through website https://cie.fraft.org/ with selenium.
-4. It is made for collecting the pictures address on the sina blog, due to cancel the one-click export function.
+The basic and essential function is in the get https website.py file, which can get https website normally.
+1. The spider programme is designed for catching one complete novel with searching function by name of novel or writer.
+2. The same function as the first one, however, change another website.
+3. CIE past paper catching online through website https://cie.fraft.org/ with selenium.
+4. It is made for collecting the picture's address on the Sina blog, due to cancel the one-click export function.
