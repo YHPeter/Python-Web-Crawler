@@ -42,7 +42,7 @@ class Baidu_Translate():
         return str(token)
 
     def Translate(self,info_list):
-        sign = execjs.compile(open(r"C:\Users\peter\Desktop\Programming\Temp\sign.js",'r',encoding='utf-8').read()).call('e',info_list[0])
+        sign = execjs.compile(open(r"sign.js",'r',encoding='utf-8').read()).call('e',info_list[0])
         headers={
             "Host": "fanyi.baidu.com",
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.87 Safari/537.36",
