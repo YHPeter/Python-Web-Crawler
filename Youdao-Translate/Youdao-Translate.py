@@ -5,7 +5,7 @@ from fake_useragent import UserAgent
 
 def main(func,adr):
     if func == 1:
-        query = str(input("Please enter passage:\n"))
+        query = str(input("Please enter words:\n"))
         translate_m(query,1)
     elif func == 2:
         for line in open(adr,'r',encoding='utf-8').readlines():
