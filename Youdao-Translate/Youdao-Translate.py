@@ -64,8 +64,10 @@ def translate_m(query,mode):
 
     res = requests.post("http://fanyi.youdao.com/translate_o?smartresult=dict&smartresult=rule",data = param,headers = headers)
     content = json.loads(res.text)
-    origin = content['translateResult'][0][0]['src']
-    translated = content['translateResult'][0][0]['tgt']
+    origin, translated = '',''
+    for f in content['translateResult'][0]:
+        origin = (origin + f['src'])
+        translated = (translated + f['tgt'])
     if mode == 1:    
         print('Origin:',origin,'\n'+'Translated:',translated)
     else:
