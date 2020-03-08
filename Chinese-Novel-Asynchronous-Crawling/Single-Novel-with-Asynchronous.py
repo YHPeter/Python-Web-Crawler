@@ -68,10 +68,10 @@ if __name__ == '__main__':
     urls = urlPool(r"https://www.126shu.co/9478/",'<dd><a href="(.*?)" title=".*?">(.*?)</a></dd>') # get url pools(url,re.pattern)
                                                                                                     # change the re pattern for content list
     semaphore = asyncio.Semaphore(500) # Limit concurrency to 500 in windows; if content get nothing, derease the number, thw website can't bear....
-    folder_adress = r'E:/'
+    folder_adress = r'E:/book_name/'
     tasks = [asyncio.ensure_future(main_process(url[0],url[1],index,semaphore,folder_adress)) for index,url in enumerate(urls)]
     loop = asyncio.get_event_loop()
     loop.run_until_complete(asyncio.wait(tasks))
 
-    print('Total time:',(time.time()-start1),'s','Time for each chapter:',(time.time()-start1)/len(urls),'s')
+    print('Total time:',(time.time()-start1),'s','Time for each chapter:',(time.time()-start1)/len(urls),'s')# get total time, compare to normal single thread
     
