@@ -44,7 +44,7 @@ async def write_file(novel_content,title,filename):
 
 async def main_process(url,title,index,semaphore,file_adress):
     #print(url,title,index)
-    filename = file_adress + str(str(index).zfill(5)) + '.txt' # make usre combine in order
+    filename = file_adress + str(str(index).zfill(5)) + '.txt' # make sure combine in order
     if os.path.isfile(filename):
         print(title,'has downloaded previously!')
     else:
@@ -57,7 +57,7 @@ async def main_process(url,title,index,semaphore,file_adress):
 
 def urlPool(book_index,pattern):
     urls_list=requests.get(book_index,ua.random).content
-    urls_list=str(urls_list,'gbk',errors = 'ignore')#some times will change to 'utf-8'
+    urls_list=str(urls_list,'gbk',errors = 'ignore')#sometimes will change to 'utf-8'
     urls = re.findall(re.compile(pattern),urls_list)
     return urls #[(url,chapter_title)]
 
@@ -68,10 +68,10 @@ if __name__ == '__main__':
     urls = urlPool(r"https://www.126shu.co/9478/",'<dd><a href="(.*?)" title=".*?">(.*?)</a></dd>') # get url pools(url,re.pattern)
                                                                                                     # change the re pattern for content list
     semaphore = asyncio.Semaphore(500) # Limit concurrency to 500 in windows; if content get nothing, derease the number, thw website can't bear....
-    folder_adress = r'E:/book_name/'
+    folder_adress = r'D:/.../book_name/'
     tasks = [asyncio.ensure_future(main_process(url[0],url[1],index,semaphore,folder_adress)) for index,url in enumerate(urls)]
     loop = asyncio.get_event_loop()
     loop.run_until_complete(asyncio.wait(tasks))
 
-    print('Total time:',(time.time()-start1),'s','Time for each chapter:',(time.time()-start1)/len(urls),'s')# get total time, compare to normal single thread
+    print('Total time:',(time.time()-start1),'s','Time for each chapter:',(time.time()-start1)/len(urls),'s')
     
