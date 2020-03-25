@@ -56,7 +56,7 @@ def get_content(chapter_list, novel_name):
 
 
 if __name__ == '__main__':
-    book_name = input('请输入你要下载的小说名字(确保输入的小说名字正确)：')
+    book_name = input('请输入你要下载的小说名字(确保输入的小说名字正确)：')#search novel book by novel name without fuzzy query
     novel_url, novel_name = download(book_name)
     chapter_list = get_chapter(novel_url)
     get_content(chapter_list, novel_name)
