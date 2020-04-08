@@ -12,8 +12,8 @@ The new website is:
     msg['From'] = Header('xxxx@xxxx.com')
     msg['To'] = Header('Who','utf-8')
     
-    from_addr = 'peter@petertown.ml' #sending mail adress
-    password = 'PeterTown123456'     #sending mail password
+    from_addr = 'XXXXXXXXXXXXXXX' #sending mail adress
+    password = 'XXXXXXXXXXXXXXXX'     #sending mail password
     to_addr = 'XXXXXXXXXXXX' #recesiving mail adress
     smtp_server = 'smtpdm.aliyun.com' #your smtp service provider adress
     
