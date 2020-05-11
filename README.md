@@ -21,7 +21,7 @@ The basic and essential function is in the get https website.py file, which can 
 4.  通过**js逆向**分析**百度翻译**的requests，成功使用[百度翻译](https://fanyi.baidu.com)，可以中译英或英译中。具体js逆向过程可在打开文件夹仔细阅读 README.md！
 5.  通过**js逆向**分析**有道翻译**的requests请求，使用在线翻译[有道翻译](http://fanyi.youdao.com) 访问自动语言选择翻译，还支持终端或本地txt文件的输入，并在终端或原来的txt文件中输出，无需替换。
 6.  在[Unsplash.com](https://www.unsplash.com) 中使用带有**多线程，http代理和分块(stream)** 来下载8k墙纸等大文件，减少整个文件占用内存的情况。
-7.  采用**异步下载**网络小说，缩短总时间。与单线程和异步方法相比，第二种方法（大约每章0.05s）比单线程（大约每章0.5s）**快10倍**。~~同时，用户需要点击bat文件，在不同的情况下将每个独立文件夹中的所有单个txt文件合并。~~最新的版本已经集成合并功能，无需bat文件。具体看代码！
+7.  采用**异步下载**网络小说，缩短总时间。与单线程和异步方法相比，第二种方法（大约每章0.05s）比单线程（大约每章0.5s）**快10倍**。~~同时，用户需要点击bat文件，在不同的情况下将每个独立文件夹中的所有单个txt文件合并。~~ 最新的版本已经集成合并功能，无需bat文件。具体看代码！
 8.  由于COVID-19的影响，CAIE官方的更新公告与每个参加2020夏季考生息息相关。该项目：每分钟从 https://www.cambridgeinternational.org/news/ 获取最新消息，并通过**SMTP电子邮件**地址将新的URL发送到我们的电子邮件。我已**部署服务器**，文件夹中有更多详细信息。[CAIE-Notification](https://github.com/YHPeter/Python-Web-Crawler/tree/master/CAIE-Notification-via-SMTP-Email)
 
 ## 希望大家可以Star！Star！Star！I will keep on working!
