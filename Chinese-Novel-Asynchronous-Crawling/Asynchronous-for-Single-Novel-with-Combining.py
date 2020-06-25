@@ -1,4 +1,5 @@
-# novel_download with asynchronous library
+# -*- coding: utf-8 -*-
+# # novel_download with asynchronous library
 
 '''
 Summary for some novel book station re pattern:

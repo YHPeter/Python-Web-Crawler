@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import requests
 import re,time
 from fake_useragent import UserAgent

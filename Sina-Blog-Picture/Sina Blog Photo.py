@@ -47,7 +47,6 @@ if __name__ == "__main__":
         if pic_url == []:
             pass
         else:
-            #print(pic_url)
             txt(pic_url)
         star_url = newUrl(star_url)
     pass

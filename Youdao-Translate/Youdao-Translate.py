@@ -1,4 +1,4 @@
-
+# -*- coding: utf-8 -*-
 import gzip,re,time,hashlib
 import requests, random, json
 from fake_useragent import UserAgent

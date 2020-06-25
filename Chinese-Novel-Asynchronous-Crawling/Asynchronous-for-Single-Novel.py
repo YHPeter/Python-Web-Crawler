@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # novel_download with asynchronous library
 
 '''
