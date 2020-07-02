@@ -43,7 +43,6 @@ class Pastpaper(object):
 
     def dir_content(self,dir):
         """ Get content of dir; --> List[contents]"""
-        print(dir)
         dir = '/cie/?dir=A-Level%2FEconomics-9708'
         current_url = self.domain_url+dir
         headers = {'User-Agent': ua.random}
@@ -63,6 +62,7 @@ class Pastpaper(object):
             for i in sel:
                 options.append([i.get_text().strip(),i['href']])
             self.current_display = options
+        del r
 
 
     def download_file(self,file_name,file_path,file_url):

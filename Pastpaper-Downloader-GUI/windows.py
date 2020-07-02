@@ -96,6 +96,7 @@ class Ui_MainWindow(object):
         self.store_place.setObjectName("store_place")
         self.formLayout.setWidget(4, QtWidgets.QFormLayout.FieldRole, self.store_place)
 
+
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
@@ -114,3 +115,12 @@ class Ui_MainWindow(object):
         self.toolButton.setText(_translate("MainWindow", "多选功能"))
         self.download.setText(_translate("MainWindow", "下载所选文件、文件夹"))
         self.store_place.setText(_translate("MainWindow", "文件储存位置"))
+        menu = QMenu()
+        self.open_choose = QAction(QIcon("menu.ico"),"打开",menu)
+        self.choose_reverse = QAction(QIcon("menu.ico"),'反选',menu)
+        self.choose_all = QAction(QIcon("menu.ico"),'全选',menu)
+        menu.addActions([self.open_choose,self.choose_reverse,self.choose_all])
+        self.toolButton.setMenu(menu)
+        # self.toolButton.setAutoRaise(False)
+        self.toolButton.setPopupMode(QToolButton.MenuButtonPopup)
+        

@@ -10,72 +10,89 @@ from PyQt5.QtWidgets import *
 from functools import partial
 import windows
 
+class actions():
+    def __init__(self):
+        super(actions).__init__()
+        self.info_model = QStandardItemModel()
+        self.display_table(pa.current_display)
+        
+    def display_table(self,info):
+        """"Display infomation in the table"""
+        self.info_model.clear
+        for row in range(len(info)):
+            item_checked = QStandardItem()
+            item_checked.setCheckState(Qt.Unchecked)
+            item_checked.setCheckable(True)
+            item_checked.isDropEnabled()
+            self.info_model.setItem(row,1, item_checked)
+            item = QStandardItem(info[row][0])
+            self.info_model.setItem(row,0,item)
+        ui.info.setModel(self.info_model)
+        ui.info.setColumnWidth(1,1)
+        ui.info.setColumnWidth(0,426)
 
-def display_table(info):
-    """"Display infomation in the table"""
-    ui.model.clear
-    for row in range(len(info)):
-        item_checked = QStandardItem()
-        item_checked.setCheckState(Qt.Unchecked)
-        item_checked.setCheckable(True)
-        item_checked.isDropEnabled()
-        ui.model.setItem(row,1, item_checked)
-        item = QStandardItem(info[row][0])
-        ui.model.setItem(row,0,item)
-    ui.info.setModel(ui.model)
-    ui.info.setColumnWidth(1,1)
-    ui.info.setColumnWidth(0,426)
+
+    def table_item_clicked_open(self):
+        """Return List of items checked"""
+        print('checked open')
+
+
+    def table_item_clicked_download(self):
+        """Return List of items checked"""
+        pass
+
+    def tb_open_choose(self):
+        pa.dir_content('sdf')
+        self.display_table(pa.current_display)
+    def tb_choose_reverse(self):
+        pass
+    def tb_choossae_all(self):
+        # r = self.player_tabview.currentIndex().row()
+        # item = self.player_model.index(r,0)
+        for i in range(len(pa.current_display)):
+            # if not self.info_model.index(i,0).isChecked():
+            #     self.info_model.index(i,0).setCheckState(Qt.checked)
+            
+            print(self.table_item_clicked(ui.info))
+
+        # self.connect(self.table, QtCore.SIGNAL("itemClicked(QTableWidgetItem*)"), self.table_item_clicked)
+    def tb_choose_all(self):
+        checked_list = []
+        for i in range(ui.info.rowCount()):
+            #print(self.tableWidget.rowCount())
+            if ui.info.item(i, 1).isChecked():
+                checked_list.append([i,1])
+            elif ui.info.cellWidget(i, 2).isChecked():
+                checked_list.append([i,2])
+            else:
+                pass
+        print(checked_list)
+                    
+    def serach_clicked(self):
+        pass
+    def exam_office_clicked(self):
+        pass
+    def grade_clicked(self):
+        print('grade_clicked')
+        pass
+    def subject_clicked(self):
+        pass
+    def year_clicked(self):
+        pass
+    def month_clicked(self):
+        pass
+    def component_clicked(self):
+        print('component')
+        pass
+    def download_clicked(self):
+        reply = QMessageBox.question(self, '确认', '确定下载?',QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            pass
+    def store_place(self):
+        pass
+
+
     
-
-def current_table():
-    ui.start_search.clicked.connect(pa.dir_content)
-    print(pa.current_display)
-    display_table(pa.current_display)
-
-def table_item_clicked_open():
-    """Return List of items checked"""
-    print('checked open')
-
-
-def table_item_clicked_download():
-    """Return List of items checked"""
-    pass
-
-def bt_init():
-    ui.toolButton.setAutoRaise(True)
-
-    menu = QMenu()
-    ui.toolButton.open_choose = QAction('打开')
-    ui.toolButton.choose_reverse = QAction('反选')
-    ui.toolButton.choose_all = QAction('全选')
-
-    menu.addAction(ui.toolButton.open_choose)
-    menu.addSeparator()
-    menu.addAction(ui.toolButton.choose_reverse)
-    menu.addAction(ui.toolButton.choose_all)
-    ui.toolButton.setMenu(menu)
-
-    ui.toolButton.open_choose.triggered.connect(tb_on_click)
-    ui.toolButton.choose_reverse.triggered.connect(tb_on_click)
-    ui.toolButton.choose_all.triggered.connect(tb_on_click)
-
-def tb_on_click():
-    if ui.toolButton.sender() == ui.toolButton.open_choose:
-        tb_open_choose()
-    elif ui.toolButton.sender() == ui.toolButton.choose_reverse:
-        tb_choose_reverse()
-    elif ui.toolButton.sender() == ui.toolButton.choose_all:
-        tb_choose_all()
-
-def tb_open_choose():
-    pass
-def tb_choose_reverse():
-    pass
-def tb_choose_all():
-    pass
-def serach_clicked():
-    pa.dir_content('sdf')
-    display_table(pa.current_display)
 if __name__ == '__main__':
     pa = Pastpaper()
     app = QApplication(sys.argv)
@@ -83,13 +100,18 @@ if __name__ == '__main__':
     ui = windows.Ui_MainWindow()
     ui.setupUi(MainWindow)
     MainWindow.show()
-    # bt_init()
-    display_table(pa.current_display)
-
-    ui.start_search.clicked.connect(serach_clicked)
-    # ui.start_search.clicked.connect(pa.dir_content(1))
-    # display_table(pa.current_display)
-    # print(pa.current_display)
-
+    act = actions()
+    ui.open_choose.triggered.connect(act.tb_open_choose)
+    ui.choose_reverse.triggered.connect(act.tb_choose_reverse)
+    ui.choose_all.triggered.connect(act.tb_choose_all)
+    ui.start_search.clicked.connect(act.serach_clicked)
+    ui.exam_office.clicked.connect(act.exam_office_clicked)
+    ui.grade.clicked.connect(act.grade_clicked)
+    ui.subject.clicked.connect(act.subject_clicked)
+    ui.year.clicked.connect(act.year_clicked)
+    ui.month.clicked.connect(act.month_clicked)
+    ui.component.clicked.connect(act.component_clicked)
+    ui.download.clicked.connect(act.download_clicked)
+    ui.store_place.clicked.connect(act.store_place)
 
     sys.exit(app.exec_())
