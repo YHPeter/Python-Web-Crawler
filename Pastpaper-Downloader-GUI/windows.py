@@ -2,8 +2,10 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
-from pastpaper import *
+from pastpaper import Pastpaper
+import sys
 
+all_header_checkbox = []
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         
@@ -73,21 +75,18 @@ class Ui_MainWindow(object):
         self.formLayout.setWidget(6, QtWidgets.QFormLayout.SpanningRole, self.progressBar)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
-
-        self.info = QtWidgets.QTableView(self.layoutWidget)
-        self.model = QStandardItemModel()
-        
+        self.info = QTableView(self.layoutWidget)
         self.info.setEnabled(True)
         self.info.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.info.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)#纵向滚轮
         self.info.setObjectName("info")
         font = QtGui.QFont()
         font.setPointSize(10)
-        self.info.setFont(font)
-        self.horizontalLayout.addWidget(self.info)
+        self.info.setFont(font)        
         self.info.horizontalHeader().setVisible(False)#横向表头无
         self.info.verticalHeader().setVisible(False)#纵向表头无
-
+        self.info.horizontalHeader().setStretchLastSection(True)
+        self.horizontalLayout.addWidget(self.info)
         self.formLayout.setLayout(3, QtWidgets.QFormLayout.SpanningRole, self.horizontalLayout)
         self.download = QtWidgets.QPushButton(self.layoutWidget)
         self.download.setObjectName("download")
@@ -95,8 +94,6 @@ class Ui_MainWindow(object):
         self.store_place = QtWidgets.QPushButton(self.layoutWidget)
         self.store_place.setObjectName("store_place")
         self.formLayout.setWidget(4, QtWidgets.QFormLayout.FieldRole, self.store_place)
-
-
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
@@ -119,8 +116,130 @@ class Ui_MainWindow(object):
         self.open_choose = QAction(QIcon("menu.ico"),"打开",menu)
         self.choose_reverse = QAction(QIcon("menu.ico"),'反选',menu)
         self.choose_all = QAction(QIcon("menu.ico"),'全选',menu)
-        menu.addActions([self.open_choose,self.choose_reverse,self.choose_all])
+        self.clean_choose = QAction(QIcon("menu.ico"),'全不选',menu)
+        menu.addActions([self.open_choose,self.choose_reverse,self.choose_all,self.clean_choose])
         self.toolButton.setMenu(menu)
-        # self.toolButton.setAutoRaise(False)
         self.toolButton.setPopupMode(QToolButton.MenuButtonPopup)
-        
+
+
+class actions(object):
+    def __init__(self):
+        super().__init__()
+        self.display()
+
+
+    def display(self):
+        info_model = QStandardItemModel()
+        global all_header_checkbox
+        all_header_checkbox = []
+        for row in range(len(pa.current_display)):
+            item_checked = QStandardItem()
+            item_checked.setCheckState(Qt.Unchecked)
+            item_checked.setCheckable(True)
+            item_checked.isDropEnabled()
+            info_model.setItem(row,1, item_checked)
+            all_header_checkbox.append(item_checked)
+            item = QStandardItem(pa.current_display[row][0])
+            info_model.setItem(row,0,item)
+        ui.info.setModel(info_model)
+        ui.info.setColumnWidth(1,10)
+        ui.info.setColumnWidth(0,426)
+
+
+    def tb_open_choose(self):
+        total,open = 0,0
+        print(all_header_checkbox)
+        for i in range(len(all_header_checkbox)):
+            print(all_header_checkbox[i].checkState())
+            if all_header_checkbox[i].checkState():
+                total,open = total+1,i
+        if total==1:
+            pa.dir_content(pa.current_display[open][1])
+            print(pa.current_display)
+            if pa.current_display!=[]: self.display()
+            else: QMessageBox.question(None,'critical','此目录下没有文件！', QMessageBox.Ok)
+        elif total>1:
+            reply = QMessageBox.question(None,'critical','只能选择一个文件夹打开,是否清除已选？', QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if reply==QMessageBox.Yes: self.tb_clean_all()
+        elif total==0:
+            QMessageBox.question(None,'critical','需要选择一个文件夹打开', QMessageBox.Ok)
+
+            
+    def tb_choose_reverse(self):
+        self.all_header_checkbox = all_header_checkbox
+        for i in range(len(self.all_header_checkbox)):
+            if not self.all_header_checkbox[i].checkState():
+                self.all_header_checkbox[i].setCheckState(Qt.Checked)
+            else:
+                self.all_header_checkbox[i].setCheckState(Qt.Unchecked)
+
+
+    def tb_choose_all(self):
+        self.all_header_checkbox = all_header_checkbox
+        for i in range(len(self.all_header_checkbox)):
+            self.all_header_checkbox[i].setCheckState(Qt.Checked)
+
+
+    def tb_clean_all(self):
+        self.all_header_checkbox = all_header_checkbox
+        for i in range(len(self.all_header_checkbox)):
+            self.all_header_checkbox[i].setCheckState(Qt.Unchecked)
+
+
+    def download_clicked(self):
+        if pa.current_display[0][0][-3:]=='pdf':
+            if pa.store_place=="":
+                self.store_place()
+            reply = QMessageBox.question(None,'确认', '确定下载?',QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if reply == QMessageBox.Yes:
+                for i in range(len(pa.current_display)):
+                    if all_header_checkbox[i].checkState():
+                        pa.files_pools.append(pa.current_display[i])
+                pa.single_file_urls()
+        else:
+            QMessageBox.question(None,'无法下载', '无法下载！不是PDF文件！',QMessageBox.Ok)
+
+
+    def store_place(self):
+        pa.store_place = QFileDialog.getExistingDirectory(None,'选择文件夹')
+        ui.store_place.setText(pa.store_place)
+    
+
+    def serach_clicked(self):
+        pass
+    def exam_office_clicked(self):
+        pass
+    def grade_clicked(self):
+        pass
+    def subject_clicked(self):
+        pass
+    def year_clicked(self):
+        pass
+    def month_clicked(self):
+        pass
+    def component_clicked(self):
+        pass
+
+if __name__ == '__main__':
+    pa = Pastpaper()
+    app = QApplication(sys.argv)
+    MainWindow = QMainWindow()
+    ui = Ui_MainWindow()
+    ui.setupUi(MainWindow)
+    MainWindow.show()
+
+    act = actions()
+    ui.open_choose.triggered.connect(act.tb_open_choose)
+    ui.choose_reverse.triggered.connect(act.tb_choose_reverse)
+    ui.choose_all.triggered.connect(act.tb_choose_all)
+    ui.start_search.clicked.connect(act.serach_clicked)
+    ui.exam_office.clicked.connect(act.exam_office_clicked)
+    ui.grade.clicked.connect(act.grade_clicked)
+    ui.subject.clicked.connect(act.subject_clicked)
+    ui.year.clicked.connect(act.year_clicked)
+    ui.month.clicked.connect(act.month_clicked)
+    ui.component.clicked.connect(act.component_clicked)
+    ui.download.clicked.connect(act.download_clicked)
+    ui.store_place.clicked.connect(act.store_place)
+
+    sys.exit(app.exec_())

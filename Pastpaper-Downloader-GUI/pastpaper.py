@@ -9,16 +9,16 @@ class Pastpaper(object):
         """Initial Pastaper Project"""
         super(Pastpaper).__init__()
         self.domain_url = "https://pastpapers.co"
-        self.store_palce = "C:/Users/peter/Desktop/pastpaper"
+        self.store_place = ""
         self.files_pools = []
-        self.current_display = [["cie",],"aqa","cces", "ocr"]
         self.office,self.grade,self.year,self.month,self.component = '','','','',''
         self.exam_office = {"cie":["A-Level","IGCSE","O-Level","Pre-U"], "aqa":["A-Level",'GCSE'], "cces":["GCE-A-Level","GCSE"], "ocr":["A-Level",'GCSE']}
-        self.home_choose = [['CIE: A-Level','/cie/?dir=A-Level'],['CIE: IGCSE','/cie/?dir=IGCSE'],['CIE: O-Level','/cie/?dir=O-Level'],['CIE: Pre-U','/cie/?dir=Pre-U'],
+        home_choose = [['CIE: A-Level','/cie/?dir=A-Level'],['CIE: IGCSE','/cie/?dir=IGCSE'],['CIE: O-Level','/cie/?dir=O-Level'],['CIE: Pre-U','/cie/?dir=Pre-U'],
                     ['AQA: A-Level','/aqa/?dir=A-Level'],['AQA: IGCSE','/aqa/?dir=GCSE'],
-                    ['CCES: A-Level','/cces/?dir=A-Level'],['CCES: GCE-A-Level','/cces/?dir=GCE-A-Level'],
+                    ['CCEA: GCSE','/ccea/?dir=GCSE'],['CCEA: GCE-A-Level','/ccea/?dir=GCE-A-Level'],
                     ['OCR: A-Level','/ocr/?dir=A-Level'],['OCR: IGCSE','/ocr/?dir=GCSE']]
-        self.current_display = self.home_choose
+        self.current_display = home_choose
+        
         # print("cie","aqa","cces", "ocr")
         # self.office = input('Please input exam office name:')
         # print(self.exam_office.get(self.office,'Error!'))
@@ -43,25 +43,20 @@ class Pastpaper(object):
 
     def dir_content(self,dir):
         """ Get content of dir; --> List[contents]"""
-        dir = '/cie/?dir=A-Level%2FEconomics-9708'
+        print(dir)
         current_url = self.domain_url+dir
         headers = {'User-Agent': ua.random}
         proxy = {"http": "127.0.0.1:7890","https": "127.0.0.1:7890"}     
         r = requests.get(current_url,headers)# ,proxies = proxy
-
         soup = BeautifulSoup(r.text.replace('%2F','/').replace('%26','&').replace('%20',' '),'lxml')
-        sel = soup.find_all('a',class_ = "item dir")
-        if sel==[]:
-            sel = soup.find_all('a',class_ = "item _blank pdf")
-            self.current_display = sel
-            for i in sel:
-                self.files_pools.append([i.get_text().strip(),i['href'][12:]])
-            self.single_file_urls()
-        else:
-            options = []
-            for i in sel:
-                options.append([i.get_text().strip(),i['href']])
-            self.current_display = options
+        soup_find = soup.find_all('a',class_ = "item _blank pdf")
+        options = []
+        for i in soup_find:
+            options.append([i.get_text().strip(),i['href'][12:]])
+        soup_find = soup.find_all('a',class_ = "item dir")
+        for i in soup_find:
+            options.append([i.get_text().strip(),i['href']])
+        self.current_display = options
         del r
 
 
@@ -89,10 +84,6 @@ class Pastpaper(object):
     def single_file_urls(self):
         """--> List[files ]; The final files contetns page url; --> List[]"""
         for i in self.files_pools:
-            self.download_file(i[0],self.store_palce+i[1].replace('/'+self.office+'/'+self.grade,'').replace(i[0],''),self.domain_url+i[1])
+            self.download_file(i[0],self.store_place+i[1].replace('/'+self.office+'/'+self.grade,'').replace(i[0],''),self.domain_url+i[1])
             print('Finsh Downoloaded',i[0])
         self.files_pools.clear
-# pa = Pastpaper()
-# print(pa.current_display)
-# pa.dir_content(1)
-# print(pa.current_display)
