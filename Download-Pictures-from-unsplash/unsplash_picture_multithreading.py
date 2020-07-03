@@ -68,11 +68,15 @@ def download(url_pool,method):
     Multithreading is for high connection speed to https://unsplash.com
     it will has more advantages when downloading.
     '''
+    
     if method=='single_thread':
         for i in url_pool:
             save_image(i[1],i[0])
+
     elif method=='multithreading':
         thread_download(save_image,url_pool)
+
+
 if __name__ == "__main__":
     pool_urls = urls_pool('https://unsplash.com/napi/landing_pages/backgrounds?page=%d&per_page=100')# Notice page=%d should add
 
