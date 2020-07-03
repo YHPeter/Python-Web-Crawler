@@ -1,22 +1,25 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import Qt
+# -*- utf-8 -*-
+from PyQt5 import QtCore,QtGui,QtWidgets
+from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
-from pastpaper import Pastpaper
-import sys
+import re,requests,os,sys,queue,time
+from bs4 import BeautifulSoup
+from fake_useragent import UserAgent
+ua = UserAgent()
+
 
 all_header_checkbox = []
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
-        
         MainWindow.setObjectName("MainWindow")
         MainWindow.setEnabled(True)
-        MainWindow.resize(517, 801)
-        MainWindow.setMinimumSize(QtCore.QSize(517,801))
-        MainWindow.setMaximumSize(QtCore.QSize(517,801))
+        MainWindow.resize(617, 901)
+        MainWindow.setMinimumSize(QtCore.QSize(617, 901))
+        MainWindow.setMaximumSize(QtCore.QSize(617, 901))
         MainWindow.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
         self.layoutWidget = QtWidgets.QWidget(MainWindow)
-        self.layoutWidget.setGeometry(QtCore.QRect(20, 10, 481, 771))
+        self.layoutWidget.setGeometry(QtCore.QRect(20, 10, 581, 871))
         self.layoutWidget.setObjectName("layoutWidget")
         self.formLayout = QtWidgets.QFormLayout(self.layoutWidget)
         self.formLayout.setContentsMargins(0, 0, 0, 0)
@@ -52,27 +55,28 @@ class Ui_MainWindow(object):
         self.subject.setObjectName("subject")
         self.year = QtWidgets.QToolButton(self.splitter)
         self.year.setObjectName("year")
-        self.month = QtWidgets.QToolButton(self.splitter)
-        self.month.setObjectName("month")
-        self.component = QtWidgets.QToolButton(self.splitter)
-        self.component.setObjectName("component")
+        self.back = QtWidgets.QToolButton(self.splitter)
+        self.back.setObjectName("back")
+        self.open = QtWidgets.QToolButton(self.splitter)
+        self.open.setObjectName("open")
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.SpanningRole, self.splitter)
         self.gridLayout_2 = QtWidgets.QGridLayout()
         self.gridLayout_2.setObjectName("gridLayout_2")
-        self.start_search = QtWidgets.QPushButton(self.layoutWidget)
-        self.start_search.setObjectName("start_search")
-        self.gridLayout_2.addWidget(self.start_search, 0, 1, 1, 1)
+        self.current_dir = QtWidgets.QLabel(self.layoutWidget)
+        self.current_dir.setObjectName("current_dir")
+        self.gridLayout_2.addWidget(self.current_dir, 0, 0, 1, 1)
         self.lineEdit = QtWidgets.QLineEdit(self.layoutWidget)
         self.lineEdit.setObjectName("lineEdit")
-        self.gridLayout_2.addWidget(self.lineEdit, 0, 0, 1, 1)
+        self.lineEdit.setEnabled(False)
+        self.gridLayout_2.addWidget(self.lineEdit, 0, 1, 1, 1)
         self.toolButton = QtWidgets.QToolButton(self.layoutWidget)
         self.toolButton.setObjectName("toolButton")
         self.gridLayout_2.addWidget(self.toolButton, 0, 2, 1, 1)
         self.formLayout.setLayout(2, QtWidgets.QFormLayout.SpanningRole, self.gridLayout_2)
-        self.progressBar = QtWidgets.QProgressBar(self.layoutWidget)
-        self.progressBar.setProperty("value", 100)
-        self.progressBar.setObjectName("progressBar")
-        self.formLayout.setWidget(6, QtWidgets.QFormLayout.SpanningRole, self.progressBar)
+        self.single_progressBar = QtWidgets.QProgressBar(self.layoutWidget)
+        self.single_progressBar.setProperty("value", 0)
+        self.single_progressBar.setObjectName("single_progressBar")
+        self.formLayout.setWidget(6, QtWidgets.QFormLayout.SpanningRole, self.single_progressBar)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.info = QTableView(self.layoutWidget)
@@ -105,29 +109,61 @@ class Ui_MainWindow(object):
         self.grade.setText(_translate("MainWindow", "年级"))
         self.subject.setText(_translate("MainWindow", "科目"))
         self.year.setText(_translate("MainWindow", "年份"))
-        self.month.setText(_translate("MainWindow", "月份"))
-        self.component.setText(_translate("MainWindow", "卷号"))
-        self.start_search.setText(_translate("MainWindow", "GO"))
+        self.back.setText(_translate("MainWindow", "上一级文件夹"))
+        self.open.setText(_translate("MainWindow", "打开文件夹"))
+        self.current_dir.setText(_translate("MainWindow", "当前文件夹"))
         self.lineEdit.setText(_translate("MainWindow", "Search component"))
         self.toolButton.setText(_translate("MainWindow", "多选功能"))
         self.download.setText(_translate("MainWindow", "下载所选文件、文件夹"))
         self.store_place.setText(_translate("MainWindow", "文件储存位置"))
         menu = QMenu()
-        self.open_choose = QAction(QIcon("menu.ico"),"打开",menu)
         self.choose_reverse = QAction(QIcon("menu.ico"),'反选',menu)
         self.choose_all = QAction(QIcon("menu.ico"),'全选',menu)
         self.clean_choose = QAction(QIcon("menu.ico"),'全不选',menu)
-        menu.addActions([self.open_choose,self.choose_reverse,self.choose_all,self.clean_choose])
+        menu.addActions([self.choose_reverse,self.choose_all,self.clean_choose])
         self.toolButton.setMenu(menu)
         self.toolButton.setPopupMode(QToolButton.MenuButtonPopup)
 
+
+class WorkThread(QThread):
+    progressBarValue = pyqtSignal(int)
+    def __init__(self):
+        super(WorkThread, self).__init__()
+    def run(self):
+        print("thread run..")
+        start = time.time()
+        self.finished = 0
+        self.total_ = len(pa.files_pools)
+        for i in pa.files_pools:
+            self.download_files(i[0],pa.store_place+i[1].replace('/'+pa.office+'/'+pa.grade,'').replace(i[0],''),pa.domain_url+i[1])
+            print("\r" + "[下载进度]：%s%.2f%%" % ( ">" * int(self.finished * 50 / total_), float(self.finished / total_ * 100)), end="")
+        end = time.time() 
+        print("\n" + "全部下载完成！用时%.2f秒" % (end - start))
+
+    def download_files(self,file_name,file_path,file_url):
+        print("Down file:" + file_name)        
+        if not os.path.isdir(file_path):
+            os.makedirs(file_path)
+        else:
+            if os.path.isfile(file_path+file_name):
+                print(file_name,'has downloaded previously!')
+                self.finished+=1
+                self.progressBarValue.emit(int(self.finished * 100 / self.total_ ))
+            else:
+                headers = {'User-Agent': ua.random}
+                proxy = {"http": "127.0.0.1:7890","https": "127.0.0.1:7890"}  
+                with open(file_path+file_name,'wb') as f:
+                    r = requests.get(file_url, headers)
+                    f.write(r.content)
+                self.finished+=1
+                self.progressBarValue.emit(int(self.finished * 100 / self.total_ ))
 
 class actions(object):
     def __init__(self):
         super().__init__()
         self.display()
-
-
+        self.current = 'Home'
+        ui.lineEdit.setText(self.current)
     def display(self):
         info_model = QStandardItemModel()
         global all_header_checkbox
@@ -142,28 +178,49 @@ class actions(object):
             item = QStandardItem(pa.current_display[row][0])
             info_model.setItem(row,0,item)
         ui.info.setModel(info_model)
-        ui.info.setColumnWidth(1,10)
+        ui.info.setColumnWidth(1,1)
         ui.info.setColumnWidth(0,426)
 
-
-    def tb_open_choose(self):
+    def open_clicked(self):
         total,open = 0,0
-        print(all_header_checkbox)
         for i in range(len(all_header_checkbox)):
-            print(all_header_checkbox[i].checkState())
             if all_header_checkbox[i].checkState():
-                total,open = total+1,i
+                if not (pa.current_display[0][0][-3:]=='pdf' or pa.current_display[0][0][-3:]=='PDF'):
+                    total,open = total+1,i
+                else:
+                    QMessageBox.question(None,'注意','PDF文件无法打开哦！', QMessageBox.Ok)
+                    break
         if total==1:
-            pa.dir_content(pa.current_display[open][1])
-            print(pa.current_display)
-            if pa.current_display!=[]: self.display()
-            else: QMessageBox.question(None,'critical','此目录下没有文件！', QMessageBox.Ok)
+            cur = pa.current_display[open][1]
+            if pa.dir_content(pa.current_display[open][1]):
+                self.current = cur
+                self.display()
+                ui.lineEdit.setText(self.current.replace('?dir=',''))
+            else: QMessageBox.question(None,'注意','此目录下没有文件！', QMessageBox.Ok)
         elif total>1:
-            reply = QMessageBox.question(None,'critical','只能选择一个文件夹打开,是否清除已选？', QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            reply = QMessageBox.question(None,'注意','只能选择一个文件夹打开,是否清除已选？', QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if reply==QMessageBox.Yes: self.tb_clean_all()
         elif total==0:
-            QMessageBox.question(None,'critical','需要选择一个文件夹打开', QMessageBox.Ok)
+            QMessageBox.question(None,'注意','需要选择一个文件夹打开', QMessageBox.Ok)
 
+    def back_clicked(self):
+        if self.current=='Home': return None
+        home_urls = ['/cie/?dir=A-Level','/cie/?dir=IGCSE','/cie/?dir=O-Level',
+        '/cie/?dir=Pre-U','/aqa/?dir=A-Level','/aqa/?dir=GCSE','/ccea/?dir=GCSE',
+        '/ccea/?dir=GCE-A-Level','/ocr/?dir=A-Level','/ocr/?dir=GCSE']
+        # previous = '/'.join(self.current.split('/')[:-1]).replace('?dir=','')
+        print(self.current)
+        previous = '/'.join(self.current.split('/')[:-1])
+        if self.current in home_urls:
+            pa.current_display = sorted(pa.home_choose)
+            self.display()
+            self.current = 'Home'
+            ui.lineEdit.setText(self.current)
+        else:
+            pa.dir_content(previous)
+            self.display()
+            self.current = previous
+            ui.lineEdit.setText(self.current.replace('?dir=',''))
             
     def tb_choose_reverse(self):
         self.all_header_checkbox = all_header_checkbox
@@ -173,32 +230,34 @@ class actions(object):
             else:
                 self.all_header_checkbox[i].setCheckState(Qt.Unchecked)
 
-
     def tb_choose_all(self):
         self.all_header_checkbox = all_header_checkbox
         for i in range(len(self.all_header_checkbox)):
             self.all_header_checkbox[i].setCheckState(Qt.Checked)
-
 
     def tb_clean_all(self):
         self.all_header_checkbox = all_header_checkbox
         for i in range(len(self.all_header_checkbox)):
             self.all_header_checkbox[i].setCheckState(Qt.Unchecked)
 
-
     def download_clicked(self):
-        if pa.current_display[0][0][-3:]=='pdf':
+        pa.files_pools.clear
+        if pa.current_display[0][0][-3:]=='pdf' or pa.current_display[0][0][-3:]=='PDF':
             if pa.store_place=="":
                 self.store_place()
-            reply = QMessageBox.question(None,'确认', '确定下载?',QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            reply = QMessageBox.question(None,'确认', '确定下载?', QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if reply == QMessageBox.Yes:
                 for i in range(len(pa.current_display)):
                     if all_header_checkbox[i].checkState():
                         pa.files_pools.append(pa.current_display[i])
-                pa.single_file_urls()
+                        pa.download_files_start()
+                        ui.single_progressBar.setValue(0)
+                        ui.download.setText("下载完成！")
+                        time.sleep(0.3)
+                        ui.download.setText("继续下载所选文件")
+                        ui.download.setDisabled(False)
         else:
-            QMessageBox.question(None,'无法下载', '无法下载！不是PDF文件！',QMessageBox.Ok)
-
+            QMessageBox.question(None,'警告', '无法下载！不是PDF文件！',QMessageBox.Ok)
 
     def store_place(self):
         pa.store_place = QFileDialog.getExistingDirectory(None,'选择文件夹')
@@ -215,10 +274,49 @@ class actions(object):
         pass
     def year_clicked(self):
         pass
-    def month_clicked(self):
-        pass
-    def component_clicked(self):
-        pass
+
+
+
+class Pastpaper(object):
+    def __init__(self):
+        """Initial Pastaper Project"""
+        super(Pastpaper).__init__()
+        self.domain_url = "https://pastpapers.co"
+        self.store_place = ""
+        self.files_pools = []
+        self.office,self.grade,self.year,self.month,self.component = '','','','',''
+        self.exam_office = {"cie":["A-Level","IGCSE","O-Level","Pre-U"], "aqa":["A-Level",'GCSE'], "cces":["GCE-A-Level","GCSE"], "ocr":["A-Level",'GCSE']}
+        self.home_choose = [['CIE: A-Level','/cie/?dir=A-Level'],['CIE: IGCSE','/cie/?dir=IGCSE'],['CIE: O-Level','/cie/?dir=O-Level'],['CIE: Pre-U','/cie/?dir=Pre-U'],
+                    ['AQA: A-Level','/aqa/?dir=A-Level'],['AQA: IGCSE','/aqa/?dir=GCSE'],
+                    ['CCEA: GCSE','/ccea/?dir=GCSE'],['CCEA: GCE-A-Level','/ccea/?dir=GCE-A-Level'],
+                    ['OCR: A-Level','/ocr/?dir=A-Level'],['OCR: IGCSE','/ocr/?dir=GCSE']]
+        self.current_display = sorted(self.home_choose)
+
+    def dir_content(self,dir):
+        """ Get content of dir; --> List[contents]"""
+        current_url = self.domain_url+dir
+        headers = {'User-Agent': ua.random}
+        proxy = {"http": "127.0.0.1:7890","https": "127.0.0.1:7890"}     
+        r = requests.get(current_url,headers)# ,proxies = proxy
+        options = []
+        soup = BeautifulSoup(r.text.replace('%2F','/').replace('%26','&').replace('%20',' '),'lxml')
+        soup_find = soup.find_all(True, {"class":["item _blank pdf","item _blank PDF", "item dir"]})
+        for i in soup_find:
+            options.append([i.get_text().strip(),i['href']])
+        if options!=[]:
+            self.current_display = options
+            return 1
+        else: return 0
+        del r
+
+    def download_files_start(self):
+        ui.download.setText("正在下载...")
+        ui.download.setDisabled(True)
+        # for i in pa.files_pools:
+        self.workthread = WorkThread()
+        self.workthread.progressBarValue.connect(ui.single_progressBar.setValue)#act.set_progressbar_value)
+        self.workthread.start()
+
 
 if __name__ == '__main__':
     pa = Pastpaper()
@@ -229,16 +327,15 @@ if __name__ == '__main__':
     MainWindow.show()
 
     act = actions()
-    ui.open_choose.triggered.connect(act.tb_open_choose)
     ui.choose_reverse.triggered.connect(act.tb_choose_reverse)
     ui.choose_all.triggered.connect(act.tb_choose_all)
-    ui.start_search.clicked.connect(act.serach_clicked)
+    # ui.current_dir.clicked.connect(act.serach_clicked)
     ui.exam_office.clicked.connect(act.exam_office_clicked)
     ui.grade.clicked.connect(act.grade_clicked)
     ui.subject.clicked.connect(act.subject_clicked)
     ui.year.clicked.connect(act.year_clicked)
-    ui.month.clicked.connect(act.month_clicked)
-    ui.component.clicked.connect(act.component_clicked)
+    ui.back.clicked.connect(act.back_clicked)
+    ui.open.clicked.connect(act.open_clicked)
     ui.download.clicked.connect(act.download_clicked)
     ui.store_place.clicked.connect(act.store_place)
 
