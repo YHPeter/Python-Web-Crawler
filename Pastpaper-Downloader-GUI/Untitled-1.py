@@ -10,16 +10,18 @@ ua = UserAgent()
 
 
 all_header_checkbox = []
-class Ui_MainWindow(object):
+class Ui_MainWindow(QWidget):
+    # def __init__(self,parent=None):
+    #     super(Ui_MainWindow, self).__init__(parent)
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.setEnabled(True)
-        MainWindow.resize(617, 901)
-        MainWindow.setMinimumSize(QtCore.QSize(617, 901))
-        MainWindow.setMaximumSize(QtCore.QSize(617, 901))
+        MainWindow.resize(617, 931)
+        MainWindow.setMinimumSize(QtCore.QSize(617, 931))
+        MainWindow.setMaximumSize(QtCore.QSize(617, 931))
         MainWindow.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
         self.layoutWidget = QtWidgets.QWidget(MainWindow)
-        self.layoutWidget.setGeometry(QtCore.QRect(20, 10, 581, 871))
+        self.layoutWidget.setGeometry(QtCore.QRect(20, 40, 581, 871))
         self.layoutWidget.setObjectName("layoutWidget")
         self.formLayout = QtWidgets.QFormLayout(self.layoutWidget)
         self.formLayout.setContentsMargins(0, 0, 0, 0)
@@ -79,7 +81,7 @@ class Ui_MainWindow(object):
         self.formLayout.setWidget(6, QtWidgets.QFormLayout.SpanningRole, self.single_progressBar)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
-        self.info = QTableView(self.layoutWidget)
+        self.info = QTableWidget(self.layoutWidget)
         self.info.setEnabled(True)
         self.info.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.info.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)#纵向滚轮
@@ -90,6 +92,7 @@ class Ui_MainWindow(object):
         self.info.horizontalHeader().setVisible(False)#横向表头无
         self.info.verticalHeader().setVisible(False)#纵向表头无
         self.info.horizontalHeader().setStretchLastSection(True)
+        self.info.setItem(0,0, QTableWidgetItem("Name")) 
         self.horizontalLayout.addWidget(self.info)
         self.formLayout.setLayout(3, QtWidgets.QFormLayout.SpanningRole, self.horizontalLayout)
         self.download = QtWidgets.QPushButton(self.layoutWidget)
@@ -123,6 +126,40 @@ class Ui_MainWindow(object):
         self.open.clicked.connect(self.open_clicked)
         self.download.clicked.connect(self.download_clicked)
         self.store_place_bt.clicked.connect(self.store_place_clicked)
+        # menubar setting
+        '''
+        menu:
+            File
+                open in browser
+                opne in local
+            System
+                setting
+                    proxy
+                    thread
+                exit
+        '''
+        menubar = self.menuBar()
+        menu1 = menubar.addMenu("系统")
+        menu1_sub1 = QAction( "退出软件", self)
+        menu1_sub2 = QAction( "设置", self)
+        menu1_sub1.setShortcut("Ctrl+Q")
+        menu1_sub2.setShortcut("Ctrl+I")
+        menu1_sub1.setStatusTip("Exit Application")
+        menu1_sub2.setStatusTip("Setting")
+        menu1_sub1.triggered.connect(self.exit)
+        menu1_sub2.triggered.connect(self.setting)
+        menu1.addActions([menu1_sub1,menu1_sub2])
+
+        menu2 = menubar.addMenu("文件")
+        menu2_sub1 = QAction("浏览器中打开",self)
+        menu2_sub2 = QAction("默认程序打开",self)
+        menu2_sub1.setStatusTip("在线预览文件")
+        menu2_sub2.setStatusTip("保存文件后预览")
+        menu2_sub1.setShortcut("Ctrl+O")
+        menu2_sub2.setShortcut("Ctrl+S")
+        menu2_sub2.triggered.connect(self.preview_browser)
+        menu2_sub2.triggered.connect(self.preview_local)
+        menu2.addActions([menu2_sub1,menu2_sub2])
 
     def retranslateself(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -147,53 +184,83 @@ class Ui_MainWindow(object):
         self.toolButton.setMenu(menu)
         self.toolButton.setPopupMode(QToolButton.MenuButtonPopup)
 
-    # def download_files_start(self):
-    #     self.single_progressBar.setValue(0)
-    #     self.download.setText("下载完成！")
-    #     self.download.setText("继续下载所选文件")
-    #     self.download.setDisabled(False)
-    #     self.download.setText("正在下载...")
-    #     self.download.setDisabled(True)
-    #     self.store_place_bt.setDisabled(True)
-    #     # 开启多线程
-    #     self.workthread = DownloadThread()
-    #     self.workthread.progressBarValue.connect(self.single_progressBar.setValue)
-    #     self.workthread.start()
-        
-
     def display(self):
-        info_model = QStandardItemModel()
         global all_header_checkbox
         all_header_checkbox = []
+        self.info.setRowCount(len(self.current_display))
+        self.info.setColumnCount(3)
         for row in range(len(self.current_display)):
-            item_checked = QStandardItem()
+            
+            item_text = QTableWidgetItem(self.current_display[row][0])
+
+            item_checked = QTableWidgetItem()
             item_checked.setCheckState(Qt.Unchecked)
-            item_checked.setCheckable(True)
-            item_checked.isDropEnabled()
-            info_model.setItem(row,1, item_checked)
             all_header_checkbox.append(item_checked)
-            item = QStandardItem(self.current_display[row][0])
-            info_model.setItem(row,0,item)
-        self.info.setModel(info_model)
-        self.info.setColumnWidth(1,1)
-        self.info.setColumnWidth(0,526)
+
+            
+            self.info.setItem(row,0,item_text)
+            self.info.setItem(row,1,item_checked)
+            
+    
+        if self.current_display[0][0][-3:]=='pdf' or self.current_display[0][0][-3:]=='PDF':
+            for row in range(len(self.current_display)):
+                item_open = QPushButton()
+                item_open.clicked.connect(self.item_download_clicked)
+                item_open.setText('下载')
+                item_open.setStyleSheet(''' text-align : center;
+                                        background-color : NavajoWhite;
+                                        height : 50px;
+                                        border-style: outset;
+                                        font : 20px  ''')# DarkSeaGreen,LightCoral,NavajoWhite
+                self.info.setCellWidget(row,2, item_open)
+        else:
+            for row in range(len(self.current_display)):
+                item_open = QPushButton()
+                item_open.clicked.connect(self.item_open_clicked)
+                item_open.setText('打开')
+                item_open.setStyleSheet(''' text-align : center;
+                                        background-color : DarkSeaGreen;
+                                        height : 50px;
+                                        border-style: outset;
+                                        font : 20px  ''')# DarkSeaGreen,LightCoral,NavajoWhite
+                self.info.setCellWidget(row,2, item_open)
+        self.info.setColumnWidth(1,0)
+        self.info.setColumnWidth(0,456)
+        self.info.setColumnWidth(2,40)
+        
+    def item_open_clicked(self):
+        button = self.sender()
+        if button:
+            row = self.info.indexAt(button.pos()).row()
+            # self.info.item(row, 0).setBackground(QColor(100,149,237))
+            # self.info.item(row, 1).setBackground(QColor(100,149,237))
+            self.update_current_page(self.current_display[row][1])
+
+    def item_download_clicked(self):
+        button = self.sender()
+        if button:
+            row = self.info.indexAt(button.pos()).row()
+            self.files_pools.clear
+            self.files_pools.append(self.current_display[row][1])
+            self.download_start()
+
+    def update_current_page(self,cur):
+        if self.dir_content(cur):
+            self.current = cur
+            self.display()
+            self.lineEdit.setText(self.current.replace('?dir=',''))
+        else: QMessageBox.question(None,'注意','此目录下没有文件！', QMessageBox.Ok)
 
     def open_clicked(self):
         total,open = 0,0
         for i in range(len(all_header_checkbox)):
             if all_header_checkbox[i].checkState():
-                if not (self.current_display[0][0][-3:]=='pdf' or self.current_display[0][0][-3:]=='PDF'):
+                if not self.is_pdf:
                     total,open = total+1,i
                 else:
                     QMessageBox.question(None,'注意','PDF文件无法打开哦！', QMessageBox.Ok)
-                    os.exit(self.open_clicked())
         if total==1:
-            cur = self.current_display[open][1]
-            if self.dir_content(self.current_display[open][1]):
-                self.current = cur
-                self.display()
-                self.lineEdit.setText(self.current.replace('?dir=',''))
-            else: QMessageBox.question(None,'注意','此目录下没有文件！', QMessageBox.Ok)
+            self.update_current_page(self.current_display[open][1])
         elif total>1:
             reply = QMessageBox.question(None,'注意','只能选择一个文件夹打开,是否清除已选？', QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if reply==QMessageBox.Yes: self.tb_clean_all()
@@ -236,17 +303,32 @@ class Ui_MainWindow(object):
 
     def download_clicked(self):
         self.files_pools.clear
+        selected = []
         if self.current_display[0][0][-3:]=='pdf' or self.current_display[0][0][-3:]=='PDF':
             while self.store_place=='':
                 self.store_place_clicked()
-            reply = QMessageBox.question(None,'确认', '确定下载?', QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-            if reply == QMessageBox.Yes:
-                for i in range(len(self.current_display)):
-                    if all_header_checkbox[i].checkState():
-                        self.files_pools.append(self.current_display[i])
-                MainWindow.download_files(self,self.files_pools)
+            for i in range(len(self.current_display)):
+                if all_header_checkbox[i].checkState():
+                    selected.append(self.current_display[i])
+            if selected==[]:
+                QMessageBox.question(None,'提醒', '请选择下载文件', QMessageBox.Ok)
+            else:
+                reply = QMessageBox.question(None,'确认', '确定下载?', QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+                self.files_pools = selected
+                self.download_start()
         else:
             QMessageBox.question(None,'警告', '无法下载！不是PDF文件！',QMessageBox.Ok)
+
+    def download_start(self):
+        reply = QMessageBox.question(None,'确认', '确定下载?', QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+        if reply == QMessageBox.Yes:
+            if len(self.files_pools)>1000:
+                MainWindow.download_files(self,self.files_pools[:300])
+                MainWindow.download_files(self,self.files_pools[300:600])
+                MainWindow.download_files(self,self.files_pools[600:900])
+                MainWindow.download_files(self,self.files_pools[900:])
+            else:
+                MainWindow.download_files(self,self.files_pools)
 
     def store_place_clicked(self):
         self.store_place = QFileDialog.getExistingDirectory(None,'选择文件夹')
@@ -263,6 +345,34 @@ class Ui_MainWindow(object):
         pass
     def year_clicked(self):
         pass
+
+    
+    # menubar function
+    def setting(self):
+        pass
+    def opne_in_browser(self):
+        pass
+    def open_in_loacl(self):
+        pass
+    def preview_browser(self):
+        selected = []
+        if self.current_display[0][0][-3:]=='pdf' or self.current_display[0][0][-3:]=='PDF':
+            while self.store_place=='':
+                self.store_place_clicked()
+            for i in range(len(self.current_display)):
+                if all_header_checkbox[i].checkState():
+                    selected.append(self.current_display[i])
+            if len(selected)==0:
+                QMessageBox.question(None,'提醒', '请选择不多于10个文件预览', QMessageBox.Ok)
+            elif len(slected)<=10: 
+                for i in selected:
+                    QDesktopServices.openUrl(QUrl(i))
+            else:
+                QMessageBox.question(None,'提醒', '选择文件过多（不可超过10个），请重新选择！', QMessageBox.Ok)
+    def preview_local(self):
+        pass
+    def exit(self):
+        qApp.exit()
 
 
     def dir_content(self,dir):
@@ -337,8 +447,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # dialog.stop_thread.connect(thread.stop)
         # self.thread.start()
         self.pool.start(thread)  # 线程池分配一个线程运行该任务
-
-
+        
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
