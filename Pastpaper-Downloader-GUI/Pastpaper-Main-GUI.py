@@ -50,14 +50,6 @@ class Ui_MainWindow(QWidget):
         self.splitter = QtWidgets.QSplitter(self.layoutWidget)
         self.splitter.setOrientation(QtCore.Qt.Horizontal)
         self.splitter.setObjectName("splitter")
-        self.exam_office = QtWidgets.QToolButton(self.splitter)
-        self.exam_office.setObjectName("exam_office")
-        self.grade = QtWidgets.QToolButton(self.splitter)
-        self.grade.setObjectName("grade")
-        self.subject = QtWidgets.QToolButton(self.splitter)
-        self.subject.setObjectName("subject")
-        self.year = QtWidgets.QToolButton(self.splitter)
-        self.year.setObjectName("year")
         self.back = QtWidgets.QToolButton(self.splitter)
         self.back.setObjectName("back")
         self.open = QtWidgets.QToolButton(self.splitter)
@@ -118,11 +110,6 @@ class Ui_MainWindow(QWidget):
         self.choose_all.triggered.connect(self.tb_choose_all)
         self.clean_all.triggered.connect(self.tb_clean_all)
         self.choose_reverse.triggered.connect(self.tb_choose_reverse)
-        # self.current_dir.clicked.connect(self.serach_clicked)
-        self.exam_office.clicked.connect(self.exam_office_clicked)
-        self.grade.clicked.connect(self.grade_clicked)
-        self.subject.clicked.connect(self.subject_clicked)
-        self.year.clicked.connect(self.year_clicked)
         self.back.clicked.connect(self.back_clicked)
         self.open.clicked.connect(self.open_clicked)
         self.download.clicked.connect(self.download_clicked)
@@ -166,16 +153,12 @@ class Ui_MainWindow(QWidget):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.label.setText(_translate("MainWindow", "Pastpaper 下载器"))
-        self.exam_office.setText(_translate("MainWindow", "考试局"))
-        self.grade.setText(_translate("MainWindow", "年级"))
-        self.subject.setText(_translate("MainWindow", "科目"))
-        self.year.setText(_translate("MainWindow", "年份"))
         self.back.setText(_translate("MainWindow", "上一级文件夹"))
         self.open.setText(_translate("MainWindow", "打开文件夹"))
         self.current_dir.setText(_translate("MainWindow", "当前文件夹"))
         self.lineEdit.setText(_translate("MainWindow", "Search component"))
         self.toolButton.setText(_translate("MainWindow", "多选功能"))
-        self.download.setText(_translate("MainWindow", "下载所选文件、文件夹"))
+        self.download.setText(_translate("MainWindow", "下载所选文件"))
         self.store_place_bt.setText(_translate("MainWindow", "文件储存位置"))
         menu = QMenu()
         self.choose_reverse = QAction(QIcon("menu.ico"),'反选',menu)
@@ -245,10 +228,19 @@ class Ui_MainWindow(QWidget):
             while self.store_place=='':
                 self.store_place_clicked()
             row = self.info.indexAt(button.pos()).row()
-            self.files_pools==[]
-            self.files_pools.append(self.current_display[row])
-            self.download_start()
+            i = self.current_display[row]
+            file_name = i[0]
+            file_path = self.store_place+i[1].replace('view.php?id=','').replace(i[0],'')
+            file_url = self.domain_url+i[1].replace('?id=','')
+            reply = QMessageBox.question(None,'确认', '确定下载?', QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+            if reply == QMessageBox.Yes:
+                self.download.setText("正在下载...")
+                # for i in pa.files_pools:
+                self.workthread = SingleDownload(file_name,file_path,file_url)
+                self.workthread.progressBarValue.connect(self.single_progressBar.setValue)#act.set_progressbar_value)
+                self.workthread.start()
         self.download.setEnabled(True)
+        self.download.setText("下载所选文件")
 
 
     def update_current_page(self,cur):
@@ -320,12 +312,11 @@ class Ui_MainWindow(QWidget):
             if selected==[]:
                 QMessageBox.question(None,'提醒', '请选择下载文件', QMessageBox.Ok)
             else:
-                reply = QMessageBox.question(None,'确认', '确定下载?', QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
                 self.files_pools = selected
                 self.download_start()
         else:
             QMessageBox.question(None,'警告', '无法下载！不是PDF文件！',QMessageBox.Ok)
-
+        
     def download_start(self):
         reply = QMessageBox.question(None,'确认', '确定下载?', QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
         if reply == QMessageBox.Yes:
@@ -341,19 +332,6 @@ class Ui_MainWindow(QWidget):
     def store_place_clicked(self):
         self.store_place = QFileDialog.getExistingDirectory(None,'选择文件夹')
         self.store_place_bt.setText(self.store_place)
-
-
-    def serach_clicked(self):
-        pass
-    def exam_office_clicked(self):
-        pass
-    def grade_clicked(self):
-        pass
-    def subject_clicked(self):
-        pass
-    def year_clicked(self):
-        pass
-
     
     # menubar clicked function
     def setting(self):
@@ -413,7 +391,45 @@ class Ui_MainWindow(QWidget):
         else: return 0
         del r
 
-
+class SingleDownload(QThread):
+    progressBarValue = pyqtSignal(int)
+    # trigger2 = pyqtSignal(str)
+    url = ""
+    basedir = "./"
+    def __init__(self,file_name,file_path,file_url):
+        super(SingleDownload, self).__init__()
+        self.url = file_url
+        self.path = file_path+file_name
+        self.name = file_name
+        if not os.path.isdir(file_path):
+            os.makedirs(file_path)
+        else:
+            if os.path.isfile(file_path+file_name):
+                print(file_name,'has downloaded previously!')
+                return None
+    def run(self):
+        print("thread run..")
+        print("down file:" + self.url)
+        start = time.time()
+        size = 0
+        r = requests.get(self.url, stream=True)  # stream 必须带上
+        chunk_size = 1024  # 每次下载大小
+        content_size = int(r.headers['content-length'])
+        if r.status_code == 200:
+            print("[文件大小]:%.2f MB" % (content_size / chunk_size / 1024))
+            with open(self.path, "wb") as file:
+                for data in r.iter_content(chunk_size=chunk_size):
+                    file.write(data)
+                    size += len(data)  # 已下载大小
+                    num = int(size / content_size * 100)
+                    self.progressBarValue.emit(num)
+                    # \r 指定第一个字符开始，搭配end属性完成覆盖进度条
+                    print("\r" + "[下载进度]：%s%.2f%%" % (
+                        ">" * int(size * 50 / content_size), float(size / content_size * 100)), end="")
+            end = time.time()  # 结束时间
+            # self.trigger2.emit("下载完成！用时%.2f秒" % (end - start))
+            print("\n" + "全部下载完成！用时%.2f秒" % (end - start))
+    
 class Signal(QObject):
     update_pb = pyqtSignal(int)
 
