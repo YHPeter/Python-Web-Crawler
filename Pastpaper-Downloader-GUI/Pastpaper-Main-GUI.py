@@ -3,7 +3,8 @@ from PyQt5 import QtCore,QtGui,QtWidgets
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
-import re,requests,os,sys,queue,time
+import re,requests,os,sys,queue,time,subprocess
+
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
 ua = UserAgent()
@@ -157,8 +158,8 @@ class Ui_MainWindow(QWidget):
         menu2_sub2.setStatusTip("保存文件后预览")
         menu2_sub1.setShortcut("Ctrl+O")
         menu2_sub2.setShortcut("Ctrl+S")
-        menu2_sub2.triggered.connect(self.preview_browser)
-        menu2_sub2.triggered.connect(self.preview_local)
+        menu2_sub1.triggered.connect(self.preview_browser_clicked)
+        menu2_sub2.triggered.connect(self.preview_local_clicked)
         menu2.addActions([menu2_sub1,menu2_sub2])
 
     def retranslateself(self, MainWindow):
@@ -206,6 +207,7 @@ class Ui_MainWindow(QWidget):
             for row in range(len(self.current_display)):
                 item_open = QPushButton()
                 item_open.clicked.connect(self.item_download_clicked)
+                item_open.setShortcut("Ctrl+D")
                 item_open.setText('下载')
                 item_open.setStyleSheet(''' text-align : center;
                                         background-color : NavajoWhite;
@@ -239,10 +241,15 @@ class Ui_MainWindow(QWidget):
     def item_download_clicked(self):
         button = self.sender()
         if button:
+            self.download.setEnabled(False)
+            while self.store_place=='':
+                self.store_place_clicked()
             row = self.info.indexAt(button.pos()).row()
-            self.files_pools.clear
-            self.files_pools.append(self.current_display[row][1])
+            self.files_pools==[]
+            self.files_pools.append(self.current_display[row])
             self.download_start()
+        self.download.setEnabled(True)
+
 
     def update_current_page(self,cur):
         if self.dir_content(cur):
@@ -255,7 +262,7 @@ class Ui_MainWindow(QWidget):
         total,open = 0,0
         for i in range(len(all_header_checkbox)):
             if all_header_checkbox[i].checkState():
-                if not self.is_pdf:
+                if not self.current_display[0][0][-3:]=='pdf' or self.current_display[0][0][-3:]=='PDF':
                     total,open = total+1,i
                 else:
                     QMessageBox.question(None,'注意','PDF文件无法打开哦！', QMessageBox.Ok)
@@ -302,7 +309,7 @@ class Ui_MainWindow(QWidget):
             self.all_header_checkbox[i].setCheckState(Qt.Unchecked)
 
     def download_clicked(self):
-        self.files_pools.clear
+        self.files_pools==[]
         selected = []
         if self.current_display[0][0][-3:]=='pdf' or self.current_display[0][0][-3:]=='PDF':
             while self.store_place=='':
@@ -329,6 +336,7 @@ class Ui_MainWindow(QWidget):
                 MainWindow.download_files(self,self.files_pools[900:])
             else:
                 MainWindow.download_files(self,self.files_pools)
+        self.files_pools==[]
 
     def store_place_clicked(self):
         self.store_place = QFileDialog.getExistingDirectory(None,'选择文件夹')
@@ -347,33 +355,46 @@ class Ui_MainWindow(QWidget):
         pass
 
     
-    # menubar function
+    # menubar clicked function
     def setting(self):
         pass
-    def opne_in_browser(self):
-        pass
-    def open_in_loacl(self):
-        pass
-    def preview_browser(self):
+
+    def preview_browser_clicked(self):
         selected = []
-        if self.current_display[0][0][-3:]=='pdf' or self.current_display[0][0][-3:]=='PDF':
-            while self.store_place=='':
-                self.store_place_clicked()
-            for i in range(len(self.current_display)):
-                if all_header_checkbox[i].checkState():
-                    selected.append(self.current_display[i])
-            if len(selected)==0:
-                QMessageBox.question(None,'提醒', '请选择不多于10个文件预览', QMessageBox.Ok)
-            elif len(slected)<=10: 
-                for i in selected:
-                    QDesktopServices.openUrl(QUrl(i))
-            else:
-                QMessageBox.question(None,'提醒', '选择文件过多（不可超过10个），请重新选择！', QMessageBox.Ok)
-    def preview_local(self):
-        pass
+        for i in range(len(self.current_display)):
+            if all_header_checkbox[i].checkState():
+                selected.append(self.current_display[i])
+        if len(selected)==0:
+            QMessageBox.question(None,'提醒', '请选择不多于10个文件或文件夹预览', QMessageBox.Ok)
+        elif len(selected)<=10: 
+            for i in selected:
+                QDesktopServices.openUrl(QUrl(self.domain_url+i[1].replace('view.php?id=','')))
+        else:
+            QMessageBox.question(None,'提醒', '选择文件过多（不可超过10个），请重新选择！', QMessageBox.Ok)
+
+    def preview_local_clicked(self):
+        selected = []#if os.path.isfile(file_path+file_name):
+        while self.store_place=='':
+            self.store_place_clicked()
+        for i in range(len(self.current_display)):
+            if all_header_checkbox[i].checkState():
+                selected.append(self.current_display[i])
+        if len(selected)==0:
+            QMessageBox.question(None,'提醒', '请选择不多于10个文件或文件夹预览', QMessageBox.Ok)
+        elif len(selected)<=10: 
+            for i in selected:
+                path = self.store_place+i[1].replace('view.php?id=','').replace("?dir=",'')
+                FILEBROWSER_PATH = os.path.join(os.getenv('WINDIR'), 'explorer.exe')
+                if os.path.isdir(path):
+                    subprocess.run([FILEBROWSER_PATH, path])
+                elif os.path.isfile(path):
+                    subprocess.run([FILEBROWSER_PATH, '/select,', path])
+                    # subprocess.Popen('explorer C:/Users/peter/Desktop/')#% self.store_place+i[1].replace("?dir=",''))
+                print(path)
+        else: QMessageBox.question(None,'提醒', '选择文件过多（不可超过10个），请重新选择！', QMessageBox.Ok)
+
     def exit(self):
         qApp.exit()
-
 
     def dir_content(self,dir):
         """ Get content of dir; --> List[contents]"""
@@ -382,16 +403,15 @@ class Ui_MainWindow(QWidget):
         proxy = {"http": "127.0.0.1:7890","https": "127.0.0.1:7890"}     
         r = requests.get(current_url,headers)# ,proxies = proxy
         options = []
-        soup = BeautifulSoup(r.text.replace('%2F','/').replace('%26','&').replace('%20',' '),'lxml')
+        soup = BeautifulSoup(r.text.replace('%2F','/').replace('%20',' '),'lxml')
         soup_find = soup.find_all(True, {"class":["item _blank pdf","item _blank PDF", "item dir"]})
         for i in soup_find:
-            options.append([i.get_text().strip(),i['href']])
+            options.append([i.get_text().strip().replace('%26','&').replace('%2F','/').replace('%20',' '),i['href']])
         if options!=[]:
             self.current_display = options
             return 1
         else: return 0
         del r
-
 
 
 class Signal(QObject):
@@ -411,22 +431,21 @@ class DownloadThread(QRunnable):
         for i in self.files_pools:
             file_name = i[0]
             file_path = mainWindow.store_place+i[1].replace('view.php?id=','').replace(i[0],'')
-            file_url = mainWindow.domain_url+i[1]
+            file_url = mainWindow.domain_url+i[1].replace('?id=','')
             if not os.path.isdir(file_path):
                 os.makedirs(file_path)
+            if os.path.isfile(file_path+file_name):
+                print(file_name,'has downloaded previously!')
+                self.finished+=1
+                self.signal.update_pb.emit(int(self.finished * 100 / self.total_ ))
             else:
-                if os.path.isfile(file_path+file_name):
-                    print(file_name,'has downloaded previously!')
-                    self.finished+=1
-                    self.signal.update_pb.emit(int(self.finished * 100 / self.total_ ))
-                else:
-                    headers = {'User-Agent': ua.random}
-                    proxy = {"http": "127.0.0.1:7890","https": "127.0.0.1:7890"}  
-                    with open(file_path+file_name,'wb') as f:
-                        r = requests.get(file_url, headers)
-                        f.write(r.content)
-                    self.finished+=1
-                    self.signal.update_pb.emit(int(self.finished * 100 / self.total_ ))
+                headers = {'User-Agent': ua.random}
+                proxy = {"http": "127.0.0.1:7890","https": "127.0.0.1:7890"}  
+                with open(file_path+file_name,'wb') as f:
+                    r = requests.get(file_url, headers)
+                    f.write(r.content)
+                self.finished+=1
+                self.signal.update_pb.emit(int(self.finished * 100 / self.total_ ))
             print("\r" + "[下载进度]：%s%.2f%%" % ( ">" * int(self.finished * 50 / self.total_), float(self.finished / self.total_ * 100)), end="")
         end = time.time() 
         print("\n" + "全部下载完成！用时%.2f秒" % (end - start))
@@ -447,7 +466,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # dialog.stop_thread.connect(thread.stop)
         # self.thread.start()
         self.pool.start(thread)  # 线程池分配一个线程运行该任务
-        
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
