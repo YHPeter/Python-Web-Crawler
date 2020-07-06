@@ -4,16 +4,14 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 import re,requests,os,sys,queue,time,subprocess
-
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
+import threading
 ua = UserAgent()
 
 
 all_header_checkbox = []
 class Ui_MainWindow(QWidget):
-    # def __init__(self,parent=None):
-    #     super(Ui_MainWindow, self).__init__(parent)
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.setEnabled(True)
@@ -108,7 +106,7 @@ class Ui_MainWindow(QWidget):
         self.lineEdit.setText(self.current)
         self.choose_all.triggered.connect(self.tb_choose_all)
         self.clean_all.triggered.connect(self.tb_clean_all)
-        self.choose_reverse.triggered.connect(self.tb_choose_reverse)
+        self.choose_inverse.triggered.connect(self.tb_choose_inverse)
         self.back.clicked.connect(self.back_clicked)
         self.open.clicked.connect(self.open_clicked)
         self.download.clicked.connect(self.download_clicked)
@@ -128,14 +126,10 @@ class Ui_MainWindow(QWidget):
         menubar = self.menuBar()
         menu1 = menubar.addMenu("System")
         menu1_sub1 = QAction( "Exit", self)
-        # menu1_sub2 = QAction( "设置", self)
         menu1_sub1.setShortcut("Ctrl+Q")
-        # menu1_sub2.setShortcut("Ctrl+I")
         menu1_sub1.setStatusTip("Exit Application")
-        # menu1_sub2.setStatusTip("Setting")
         menu1_sub1.triggered.connect(self.exit)
-        # menu1_sub2.triggered.connect(self.setting)
-        menu1.addActions([menu1_sub1])#,menu1_sub2
+        menu1.addActions([menu1_sub1])
 
         menu2 = menubar.addMenu("File")
         menu2_sub1 = QAction("Open file link",self)
@@ -147,6 +141,16 @@ class Ui_MainWindow(QWidget):
         menu2_sub1.triggered.connect(self.preview_browser_clicked)
         menu2_sub2.triggered.connect(self.preview_local_clicked)
         menu2.addActions([menu2_sub1,menu2_sub2])
+
+        # Hotkey
+        QShortcut(QKeySequence("Ctrl+D"), self, self.download_clicked)
+        QShortcut(QKeySequence("Ctrl+H"), self, self.tips)
+        self.tips()
+
+    def tips(self):
+        # Usage Tips
+        tips = "<h2>Hotkey instruction:</h2><h3>Ctrl+A Choose All<br>Ctrl+ I Choose Inverse<br>Ctrl+W Not Choose<br>Ctrl+D Download Selected Files or Folders<br>Ctrl+O Open URL in Browser<br>Ctrl+S Open file or folder<br>Ctrl+C Terminate Multi File Download Process<br>Ctrl+H Help<br>Ctrl+Q Quit</h3>"
+        QMessageBox.question(None,'Help', tips, QMessageBox.Ok)
 
     def retranslateself(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -160,10 +164,13 @@ class Ui_MainWindow(QWidget):
         self.download.setText(_translate("MainWindow", "Download selected files"))
         self.store_place_bt.setText(_translate("MainWindow", "Storage place"))
         menu = QMenu()
-        self.choose_reverse = QAction(QIcon("menu.ico"),'Inverse',menu)
-        self.choose_all = QAction(QIcon("menu.ico"),'selecte All',menu)
-        self.clean_all = QAction(QIcon("menu.ico"),'Sekecte No',menu)
-        menu.addActions([self.choose_reverse,self.choose_all,self.clean_all])
+        self.choose_inverse = QAction(QIcon("menu.ico"),'Choose Inverse',menu)
+        self.choose_all = QAction(QIcon("menu.ico"),'Choose All',menu)
+        self.clean_all = QAction(QIcon("menu.ico"),'Clearn',menu)
+        self.choose_all.setShortcut("Ctrl+A")
+        self.choose_inverse.setShortcut("Ctrl+I")
+        self.clean_all.setShortcut("Ctrl+W")
+        menu.addActions([self.choose_inverse,self.choose_all,self.clean_all])
         self.toolButton.setMenu(menu)
         self.toolButton.setPopupMode(QToolButton.MenuButtonPopup)
 
@@ -177,28 +184,23 @@ class Ui_MainWindow(QWidget):
             font.setPointSize(12)
             item_text = QTableWidgetItem(self.current_display[row][0])
             item_text.setFont(font)
-
             item_checked = QTableWidgetItem()
             item_checked.setCheckState(Qt.Unchecked)
             all_header_checkbox.append(item_checked)
-
-            
             self.info.setItem(row,0,item_text)
             self.info.setItem(row,1,item_checked)
-            
-    
         if self.current_display[0][0][-3:]=='pdf' or self.current_display[0][0][-3:]=='PDF':
             for row in range(len(self.current_display)):
-                item_open = QPushButton()
-                item_open.clicked.connect(self.item_download_clicked)
-                item_open.setShortcut("Ctrl+D")
-                item_open.setText('Download')
-                item_open.setStyleSheet(''' text-align : center;
+                item_download = QPushButton()
+                item_download.clicked.connect(self.item_download_clicked)
+                item_download.setText('Download')
+                item_download.setStyleSheet(''' text-align : center;
                                         background-color : NavajoWhite;
                                         height : 50px;
                                         border-style: outset;
                                         font : 20px  ''')# DarkSeaGreen,LightCoral,NavajoWhite
-                self.info.setCellWidget(row,2, item_open)
+                item_download.setFont(QFont('Microsoft YaHei UI', 12))
+                self.info.setCellWidget(row,2, item_download)
         else:
             for row in range(len(self.current_display)):
                 item_open = QPushButton()
@@ -207,8 +209,8 @@ class Ui_MainWindow(QWidget):
                 item_open.setStyleSheet(''' text-align : center;
                                         background-color : DarkSeaGreen;
                                         height : 50px;
-                                        border-style: outset;
-                                        font : 20px  ''')# DarkSeaGreen,LightCoral,NavajoWhite
+                                        border-style: outset''')# DarkSeaGreen,LightCoral,NavajoWhite
+                item_open.setFont(QFont('Microsoft YaHei UI', 12)) 
                 self.info.setCellWidget(row,2, item_open)
         self.info.setColumnWidth(1,0)
         self.info.setColumnWidth(0,456)
@@ -242,13 +244,16 @@ class Ui_MainWindow(QWidget):
                     os.makedirs(file_path)
                 self.download.setText("Downloading...")                
                 self.workthread = SingleDownload(file_name,file_path,file_url)
-                self.workthread.progressBarValue.connect(self.single_progressBar.setValue)#act.set_progressbar_value)
+                self.workthread.progressBarValue.connect(self.single_progressBar.setValue)
+                QShortcut(QKeySequence("Ctrl+C"), self, self.workthread.stop)
                 self.workthread.start()
             self.download.setEnabled(True)
             self.download.setText("Download selected files")
 
     def update_current_page(self,cur):
-        if self.dir_content(cur):
+        options = self.dir_content(cur)
+        if options:
+            self.current_display = options
             self.current = cur
             self.display()
             self.lineEdit.setText(self.current.replace('?dir=',''))
@@ -282,11 +287,13 @@ class Ui_MainWindow(QWidget):
             self.lineEdit.setText(self.current)
         else:
             self.current = '/'.join(self.current.split('/')[:-1])
-            self.dir_content(self.current)
+            options = self.dir_content(self.current)
+            if options:
+                self.current_display = options
             self.lineEdit.setText(self.current.replace('?dir=',''))
             self.display()
             
-    def tb_choose_reverse(self):
+    def tb_choose_inverse(self):
         self.all_header_checkbox = all_header_checkbox
         for i in range(len(self.all_header_checkbox)):
             if not self.all_header_checkbox[i].checkState():
@@ -307,20 +314,42 @@ class Ui_MainWindow(QWidget):
     def download_clicked(self):
         self.files_pools==[]
         selected = []
+        while self.store_place=='':
+            self.store_place_clicked()
+        for i in range(len(self.current_display)):
+            if all_header_checkbox[i].checkState():
+                selected.append(self.current_display[i])
+        if len(selected)==0:
+            QMessageBox.question(None,'Warning', 'No file is selected!', QMessageBox.Ok)
+            return None
+        if QMessageBox.question(None,'Confirm', 'Mkar sure to download? ', QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)==QMessageBox.No:
+            return None
         if self.current_display[0][0][-3:]=='pdf' or self.current_display[0][0][-3:]=='PDF':
-            while self.store_place=='':
-                self.store_place_clicked()
-            for i in range(len(self.current_display)):
-                if all_header_checkbox[i].checkState():
-                    selected.append(self.current_display[i])
-            if selected==[]:
-                QMessageBox.question(None,'Warning', '请选择下载文件', QMessageBox.Ok)
+            if len(selected)==1:
+                i = selected[0]
+                file_name = i[0]
+                file_path = self.store_place+i[1].replace('view.php?id=','').replace(i[0],'')
+                file_url = self.domain_url+i[1].replace('view.php?id=','')
+                print(file_path+file_name)
+                if os.path.isfile(file_path+file_name):
+                    print(file_name,'has downloaded previously!')
+                    QMessageBox.question(None,'Warning', 'This file has download. Ctrl+S 可立即打开', QMessageBox.Ok)
+                    return None
+                if not os.path.isdir(file_path):
+                    os.makedirs(file_path)
+                self.download.setText("Downloading...")                
+                self.workthread = SingleDownload(file_name,file_path,file_url)
+                self.workthread.progressBarValue.connect(self.single_progressBar.setValue)
+                self.workthread.start()
             else:
-                self.files_pools = selected
-                self.download_start()
+                self.download_start(selected)
         else:
-            QMessageBox.question(None,'Warning', '无法下载！不是PDF文件！',QMessageBox.Ok)
-        
+            if self.current == 'Home':
+                QMessageBox.question(None,'Warning', 'Too many files!', QMessageBox.Ok)
+                return None
+            self.mutifolder = MutiFolders(selected)
+            self.mutifolder.start()
+
     def download_start(self):
         reply = QMessageBox.question(None,'Confirm', 'Are you sure to download?', QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
         if reply == QMessageBox.Yes:
@@ -331,16 +360,12 @@ class Ui_MainWindow(QWidget):
                 MainWindow.download_files(self,self.files_pools[900:])
             else:
                 MainWindow.download_files(self,self.files_pools)
-        self.files_pools==[]
 
     def store_place_clicked(self):
         self.store_place = QFileDialog.getExistingDirectory(None,'Choose folder!')
         self.store_place_bt.setText(self.store_place)
     
     # menubar clicked function
-    def setting(self):
-        pass
-
     def preview_browser_clicked(self):
         selected = []
         for i in range(len(self.current_display)):
@@ -355,7 +380,7 @@ class Ui_MainWindow(QWidget):
             QMessageBox.question(None,'Warning', 'Too many files selected (<10 fiels), please select again!', QMessageBox.Ok)
 
     def preview_local_clicked(self):
-        selected = []#if os.path.isfile(file_path+file_name):
+        selected = []
         while self.store_place=='':
             self.store_place_clicked()
         for i in range(len(self.current_display)):
@@ -366,13 +391,10 @@ class Ui_MainWindow(QWidget):
         elif len(selected)<=10: 
             for i in selected:
                 path = self.store_place+i[1].replace('view.php?id=','').replace("?dir=",'')
-                FILEBROWSER_PATH = os.path.join(os.getenv('WINDIR'), 'explorer.exe')
                 if os.path.isdir(path):
-                    subprocess.run([FILEBROWSER_PATH, path])
+                    subprocess.Popen('explorer ' + os.path.normpath(path))
                 elif os.path.isfile(path):
-                    subprocess.run([FILEBROWSER_PATH, '/select,', path])
-                    # subprocess.Popen('explorer C:/Users/peter/Desktop/')#% self.store_place+i[1].replace("?dir=",''))
-                print(path)
+                    subprocess.Popen(path,shell=True)
         else: QMessageBox.question(None,'Warning', 'Too many files selected (<10 fiels), please select again!', QMessageBox.Ok)
 
     def exit(self):
@@ -381,36 +403,30 @@ class Ui_MainWindow(QWidget):
     def dir_content(self,dir):
         """ Get content of dir; --> List[contents]"""
         if str(dir) in self.url_visited.keys():
-            self.current_display = self.url_visited[str(dir)]
-            return 1
+            return self.url_visited[str(dir)]
         current_url = self.domain_url+dir
         headers = {'User-Agent': ua.random}
-        r = requests.get(current_url,headers,proxies = self.proxy)# ,
+        r = requests.get(current_url,headers,proxies = self.proxy) 
         options = []
         soup = BeautifulSoup(r.text.replace('%2F','/').replace('%20',' '),'lxml')
         soup_find = soup.find_all(True, {"class":["item _blank pdf","item _blank PDF", "item dir"]})
         for i in soup_find:
             options.append([i.get_text().strip().replace('%26','&').replace('%2F','/').replace('%20',' '),i['href']])
-        if options!=[]:
-            self.current_display = options
             self.url_visited[str(dir)] = options
-            return 1
-        else: return 0
         del r
+        return options
+
 
 class SingleDownload(QThread):
     progressBarValue = pyqtSignal(int)
-    # trigger2 = pyqtSignal(str)
-    url = ""
-    basedir = "./"
     def __init__(self,file_name,file_path,file_url):
-        super(SingleDownload, self).__init__()
-        self.url = file_url
+        QThread.__init__(self)
+        self.url = file_url.replace('view.phh','')
         self.path = file_path+file_name
         self.name = file_name
     def run(self):
-        print("thread run..")
-        print("down file:" + self.url)
+        print("SingleDownload run..")
+        print("Downloading file:" + self.url)
         start = time.time()
         size = 0
         r = requests.get(self.url, stream=True)
@@ -424,11 +440,11 @@ class SingleDownload(QThread):
                     size += len(data)
                     num = int(size / content_size * 100)
                     self.progressBarValue.emit(num)
-                    print("\r" + "[Progress]：%s%.2f%%" % (
-                        ">" * int(size * 50 / content_size), float(size / content_size * 100)), end="")
+                    print("\r" + "[Progress]：%s%.2f%%" % (">" * int(size * 50 / content_size), float(size / content_size * 100)), end="")
             end = time.time()
             print("\n" + "Finsh downloading! Taken %.2fs" % (end - start))
-    
+
+
 class Signal(QObject):
     update_pb = pyqtSignal(int)
 
@@ -457,13 +473,40 @@ class DownloadThread(QRunnable):
                 print(file_name,'is downloading...')
                 headers = {'User-Agent': ua.random}
                 with open(file_path+file_name,'wb') as f:
-                    r = requests.get(file_url, headers, proxies = self.proxy)
+                    r = requests.get(file_url, headers, proxies = mainWindow.proxy)
                     f.write(r.content)
                 self.finished+=1
                 self.signal.update_pb.emit(int(self.finished * 100 / self.total_ ))
             print("\r" + "[Progress]：%s%.2f%%" % ( ">" * int(self.finished * 50 / self.total_), float(self.finished / self.total_ * 100)), end="")
         end = time.time() 
         print("\n" + "Finsh downloading! Taken %.2fs" % (end - start))
+
+
+class MutiFolders(QThread):
+    def __init__(self,selected):
+        super(MutiFolders, self).__init__()
+        self.selected = selected
+        self.files_pools = []
+    def run(self):
+        print("MutiFolders thread run..")
+        for i in self.selected:
+            optionsi = mainWindow.dir_content(i[1])
+            if optionsi[0][0][-3:]=='pdf' or optionsi[0][0][-3:]=='PDF':
+                self.files_pools+=optionsi
+                continue
+            for j in optionsi:
+                optionsj = mainWindow.dir_content(j[1])
+                if optionsj[0][0][-3:]=='pdf' or optionsj[0][0][-3:]=='PDF':
+                    self.files_pools+=optionsj
+                    continue
+                for k in optionsj:
+                    optionsk = mainWindow.dir_content(k[1])
+                    if optionsk[0][0][-3:]=='pdf' or optionsk[0][0][-3:]=='PDF':
+                        self.files_pools+=optionsk
+                        continue
+        print(self.files_pools)
+        MainWindow.download_files(mainWindow,self.files_pools)
+
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
@@ -473,14 +516,19 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.pool = QThreadPool()
         self.pool.globalInstance()
         self.pool.setMaxThreadCount(10)
+        self.event_stop = threading.Event()
+        QtWidgets.QShortcut("Ctrl+C", self, activated=self.stop)
 
     def download_files(self,files_pools):
         thread = DownloadThread(self.count, files_pools)
         self.count += 1
         thread.signal.update_pb.connect(self.single_progressBar.setValue)
-        # self.stop_thread.connect(thread.stop)
         self.thread.start()
-        # self.pool.start(thread)  
+
+    def stop(self):
+        print('thread stop')
+        self.event_stop.set()
+        self.single_progressBar.setValue(0)
 
 
 if __name__ == '__main__':
