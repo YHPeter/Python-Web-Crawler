@@ -102,6 +102,7 @@ class Ui_MainWindow(QWidget):
         self.proxy = None#{"http": "127.0.0.1:7890","https": "127.0.0.1:7890"} 
         self.current_display = sorted(self.home_choose)
         self.display()
+        self.flag_thread = True
         self.current = 'Home'
         self.lineEdit.setText(self.current)
         self.choose_all.triggered.connect(self.tb_choose_all)
@@ -145,7 +146,11 @@ class Ui_MainWindow(QWidget):
         # Hotkey
         QShortcut(QKeySequence("Ctrl+D"), self, self.download_clicked)
         QShortcut(QKeySequence("Ctrl+H"), self, self.tips)
+        
         self.tips()
+        screen = QDesktopWidget().screenGeometry()
+        size = self.geometry()
+        self.move((screen.width() - size.width()) / 2, (screen.height() - size.height()) / 2.5)
 
     def tips(self):
         # Usage Tips
@@ -189,8 +194,7 @@ class Ui_MainWindow(QWidget):
             all_header_checkbox.append(item_checked)
             self.info.setItem(row,0,item_text)
             self.info.setItem(row,1,item_checked)
-        if self.current_display[0][0][-3:]=='pdf' or self.current_display[0][0][-3:]=='PDF':
-            for row in range(len(self.current_display)):
+            if self.current_display[row][0][-3:]=='pdf' or self.current_display[row][0][-3:]=='PDF':
                 item_download = QPushButton()
                 item_download.clicked.connect(self.item_download_clicked)
                 item_download.setShortcut("Ctrl+D")
@@ -201,8 +205,7 @@ class Ui_MainWindow(QWidget):
                                         border-style: outset;
                                         font : 20px  ''')# DarkSeaGreen,LightCoral,NavajoWhite
                 self.info.setCellWidget(row,2, item_download)
-        else:
-            for row in range(len(self.current_display)):
+            else:
                 item_open = QPushButton()
                 item_open.clicked.connect(self.item_open_clicked)
                 item_open.setText('打开')
@@ -242,13 +245,15 @@ class Ui_MainWindow(QWidget):
                     return None
                 if not os.path.isdir(file_path):
                     os.makedirs(file_path)
+                self.download.setEnabled(False)
+                self.store_place_bt.setEnable(False)
                 self.download.setText("正在下载...")                
                 self.workthread = SingleDownload(file_name,file_path,file_url)
                 self.workthread.progressBarValue.connect(self.single_progressBar.setValue)#act.set_progressbar_value)
-                QShortcut(QKeySequence("Ctrl+C"), self, self.workthread.stop)
                 self.workthread.start()
         self.download.setEnabled(True)
         self.download.setText("下载所选文件 Ctrl+D")
+        self.store_place_bt.setEnable(True)
 
     def update_current_page(self,cur):
         options = self.dir_content(cur)
@@ -324,7 +329,7 @@ class Ui_MainWindow(QWidget):
             return None
         if QMessageBox.question(None,'确认', '确定下载?', QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)==QMessageBox.No:
             return None
-        if self.current_display[0][0][-3:]=='pdf' or self.current_display[0][0][-3:]=='PDF':
+        if self.current_display[-1][0][-3:]=='pdf' or self.current_display[-1][0][-3:]=='PDF':
             if len(selected)==1:
                 i = selected[0]
                 file_name = i[0]
@@ -333,7 +338,6 @@ class Ui_MainWindow(QWidget):
                 print(file_path+file_name)
                 if os.path.isfile(file_path+file_name):
                     print(file_name,'has downloaded previously!')
-                    QMessageBox.question(None,'提示', '该文件已经下载过！Ctrl+S 可立即打开', QMessageBox.Ok)
                     return None
                 if not os.path.isdir(file_path):
                     os.makedirs(file_path)
@@ -373,7 +377,7 @@ class Ui_MainWindow(QWidget):
             if all_header_checkbox[i].checkState():
                 selected.append(self.current_display[i])
         if len(selected)==0:
-            QMessageBox.question(None,'提醒', '请选择不多于10个文件或文件夹预览', QMessageBox.Ok)
+            QDesktopServices.openUrl(QUrl(self.domain_url+self.current[1].replace('view.php?id=','')))
         elif len(selected)<=10: 
             for i in selected:
                 QDesktopServices.openUrl(QUrl(self.domain_url+i[1].replace('view.php?id=','')))
@@ -388,34 +392,55 @@ class Ui_MainWindow(QWidget):
             if all_header_checkbox[i].checkState():
                 selected.append(self.current_display[i])
         if len(selected)==0:
-            QMessageBox.question(None,'提醒', '请选择不多于10个文件或文件夹预览', QMessageBox.Ok)
+            path = self.store_place+self.current.replace('view.php?id=','').replace("?dir=",'')
+            if self.current == 'Home': path = self.store_place
+            if os.path.isdir(path):
+                print('Opne:',path)
+                subprocess.Popen('explorer ' + os.path.normpath(path))
         elif len(selected)<=10: 
             for i in selected:
                 path = self.store_place+i[1].replace('view.php?id=','').replace("?dir=",'')
                 if os.path.isdir(path):
+                    print('Opne:',path)
                     subprocess.Popen('explorer ' + os.path.normpath(path))
                 elif os.path.isfile(path):
+                    print('Opne:',path)
                     subprocess.Popen(path,shell=True)
         else: QMessageBox.question(None,'提醒', '选择文件过多（不可超过10个），请重新选择！', QMessageBox.Ok)
 
     def exit(self):
         qApp.exit()
 
+    def stop(self):
+        self.flag_thread = False
+        print('thread stop')
+        QMessageBox.question(None,'提醒', '已取消下载！', QMessageBox.Ok)
+        time.sleep(1)
+        self.flag_thread = True
+        self.single_progressBar.setValue(0)
+        self.store_place_bt.setEnabled(True)
+        self.store_place_bt.setText(self.store_place)
+
     def dir_content(self,dir):
         """ Get content of dir; --> List[contents]"""
+        if not self.flag_thread: return []
         if str(dir) in self.url_visited.keys():
             return self.url_visited[str(dir)]
         current_url = self.domain_url+dir
         headers = {'User-Agent': ua.random}
-        r = requests.get(current_url,headers,proxies = self.proxy) 
-        options = []
-        soup = BeautifulSoup(r.text.replace('%2F','/').replace('%20',' '),'lxml')
-        soup_find = soup.find_all(True, {"class":["item _blank pdf","item _blank PDF", "item dir"]})
-        for i in soup_find:
-            options.append([i.get_text().strip().replace('%26','&').replace('%2F','/').replace('%20',' '),i['href']])
-            self.url_visited[str(dir)] = options
-        del r
-        return options
+        try:
+            r = requests.get(current_url,headers,proxies = self.proxy) 
+            options = []
+            soup = BeautifulSoup(r.text.replace('%2F','/').replace('%20',' '),'lxml')
+            soup_find = soup.find_all(True, {"class":["item _blank pdf","item _blank PDF", "item dir"]})
+            for i in soup_find:
+                options.append([i.get_text().strip().replace('%26','&').replace('%2F','/').replace('%20',' '),i['href']])
+                self.url_visited[str(dir)] = options
+            del r
+            return options
+        except:
+            print('dir_content error!')
+            return []
         
 
 class SingleDownload(QThread):
@@ -442,7 +467,9 @@ class SingleDownload(QThread):
                     num = int(size / content_size * 100)
                     self.progressBarValue.emit(num)
                     print("\r" + "[下载进度]：%s%.2f%%" % (">" * int(size * 50 / content_size), float(size / content_size * 100)), end="")
+                    mainWindow.store_place_bt.setText('正在下载：'+ file_name)
             end = time.time()
+            mainWindow.store_place_bt.setText("全部下载完成！用时%.2f秒" % (end - start))
             print("\n" + "全部下载完成！用时%.2f秒" % (end - start))
 
 
@@ -460,7 +487,9 @@ class DownloadThread(QRunnable):
         start = time.time()
         self.finished = 0
         self.total_ = len(self.files_pools)
+        mainWindow.store_place_bt.setEnabled(False)
         for i in self.files_pools:
+            if not mainWindow.flag_thread: break
             file_name = i[0]
             file_path = mainWindow.store_place+i[1].replace('view.php?id=','').replace(i[0],'')
             file_url = mainWindow.domain_url+i[1].replace('view.php?id=','').replace('?id=','')
@@ -474,13 +503,19 @@ class DownloadThread(QRunnable):
                 text = file_name + ' is downloading...'
                 headers = {'User-Agent': ua.random}
                 with open(file_path+file_name,'wb') as f:
-                    r = requests.get(file_url, headers, proxies = mainWindow.proxy)
-                    f.write(r.content)
+                    res = requests.get(file_url, headers, proxies = mainWindow.proxy)
+                    f.write(res.content)
                 self.finished+=1
                 self.signal.update_pb.emit(int(self.finished * 100 / self.total_ ))
+            
             print("\r" + "[下载进度]：%s%.2f%%" % ( ">" * int(self.finished * 50 / self.total_), float(self.finished / self.total_ * 100)) + text, end="")
+            mainWindow.store_place_bt.setText('正在下载：'+ file_path + file_name)
         end = time.time() 
         print("\n" + "全部下载完成！用时%.2f秒" % (end - start))
+        mainWindow.store_place_bt.setText("全部下载完成！用时%.2f秒" % (end - start))
+        mainWindow.store_place_bt.setText(mainWindow.store_place)
+        mainWindow.setEnabled(True)
+
 
 
 class MutiFolders(QThread):
@@ -489,24 +524,30 @@ class MutiFolders(QThread):
         self.selected = selected
         self.files_pools = []
     def run(self):
+        mainWindow.store_place_bt.setEnabled(False)
+        mainWindow.store_place_bt.setText('正在递归获取三层文件夹以内的PDF链接。。。')
         print("MutiFolders thread run..")
         for i in self.selected:
+            if not mainWindow.flag_thread: break
             optionsi = mainWindow.dir_content(i[1])
-            if optionsi[0][0][-3:]=='pdf' or optionsi[0][0][-3:]=='PDF':
+            if optionsi==[] or optionsi[0][0][-3:]=='pdf' or optionsi[0][0][-3:]=='PDF':
                 self.files_pools+=optionsi
                 continue
             for j in optionsi:
+                if not mainWindow.flag_thread: break
                 optionsj = mainWindow.dir_content(j[1])
-                if optionsj[0][0][-3:]=='pdf' or optionsj[0][0][-3:]=='PDF':
+                if optionsj==[] or optionsj[0][0][-3:]=='pdf' or optionsj[0][0][-3:]=='PDF':
                     self.files_pools+=optionsj
                     continue
                 for k in optionsj:
+                    if not mainWindow.flag_thread: break
                     optionsk = mainWindow.dir_content(k[1])
-                    if optionsk[0][0][-3:]=='pdf' or optionsk[0][0][-3:]=='PDF':
+                    if optionsk==[] or optionsk[0][0][-3:]=='pdf' or optionsk[0][0][-3:]=='PDF':
                         self.files_pools+=optionsk
-                        continue
-        print(self.files_pools)
-        MainWindow.download_files(mainWindow,self.files_pools)
+        if mainWindow.flag_thread:
+            mainWindow.store_place_bt.setText('共计%d个文件'%len(self.files_pools))
+            print(self.files_pools)
+            MainWindow.download_files(mainWindow,self.files_pools)
 
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -517,7 +558,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.pool = QThreadPool()
         self.pool.globalInstance()
         self.pool.setMaxThreadCount(10)
-        self.event_stop = threading.Event()
         QtWidgets.QShortcut("Ctrl+C", self, activated=self.stop)
 
     def download_files(self,files_pools):
@@ -525,11 +565,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.count += 1
         thread.signal.update_pb.connect(self.single_progressBar.setValue)
         self.pool.start(thread)
-
-    def stop(self):
-        print('thread stop')
-        self.event_stop.set()
-        self.single_progressBar.setValue(0)
 
 
 if __name__ == '__main__':
