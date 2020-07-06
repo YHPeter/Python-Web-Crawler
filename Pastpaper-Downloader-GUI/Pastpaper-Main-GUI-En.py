@@ -154,7 +154,7 @@ class Ui_MainWindow(QWidget):
 
     def retranslateself(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Pastpaper Downloader"))
         self.label.setText(_translate("MainWindow", "Pastpaper Downloader"))
         self.back.setText(_translate("MainWindow", "Parent folder"))
         self.open.setText(_translate("MainWindow", "Open folder"))
