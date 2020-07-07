@@ -350,8 +350,9 @@ class Ui_MainWindow(QWidget):
             self.mutifolder = MutiFolders(selected)
             self.mutifolder.start()
 
-    def download_start(self):
-        reply = QMessageBox.question(None,'Confirm', 'Are you sure to download?', QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+    def download_start(self,selected):
+        if selected==[]: return None
+        reply = QMessageBox.question(None,'确认', '确定下载?', QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
         if reply == QMessageBox.Yes:
             if len(self.files_pools)>1000:
                 MainWindow.download_files(self,self.files_pools[:300])
