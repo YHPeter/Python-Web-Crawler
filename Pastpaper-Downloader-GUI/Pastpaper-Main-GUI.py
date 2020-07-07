@@ -1,4 +1,4 @@
-    # -*- utf-8 -*-
+# -*- utf-8 -*-
 from PyQt5 import QtCore,QtGui,QtWidgets
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -75,10 +75,10 @@ class Ui_MainWindow(QWidget):
         self.info = QTableWidget(self.layoutWidget)
         self.info.setEnabled(True)
         self.info.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.info.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)#纵向滚轮
+        self.info.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.info.setObjectName("info")     
-        self.info.horizontalHeader().setVisible(False)#横向表头无
-        self.info.verticalHeader().setVisible(False)#纵向表头无
+        self.info.horizontalHeader().setVisible(False)
+        self.info.verticalHeader().setVisible(False)
         self.info.horizontalHeader().setStretchLastSection(True)
         self.info.setItem(0,0, QTableWidgetItem("Name")) 
         self.horizontalLayout.addWidget(self.info)
@@ -99,7 +99,7 @@ class Ui_MainWindow(QWidget):
                     ['AQA: A-Level','/aqa/?dir=A-Level'],['AQA: IGCSE','/aqa/?dir=GCSE'],['CCEA: GCSE','/ccea/?dir=GCSE'],['CCEA: GCE-A-Level','/ccea/?dir=GCE-A-Level'],
                     ['OCR: A-Level','/ocr/?dir=A-Level'],['OCR: IGCSE','/ocr/?dir=GCSE']]
         self.url_visited = {'Home':self.home_choose}
-        self.proxy = None#{"http": "127.0.0.1:7890","https": "127.0.0.1:7890"} 
+        self.proxy = None
         self.current_display = sorted(self.home_choose)
         self.display()
         self.flag_thread = True
@@ -112,6 +112,7 @@ class Ui_MainWindow(QWidget):
         self.open.clicked.connect(self.open_clicked)
         self.download.clicked.connect(self.download_clicked)
         self.store_place_bt.clicked.connect(self.store_place_clicked)
+        
         # menubar setting
         '''
         menu:
