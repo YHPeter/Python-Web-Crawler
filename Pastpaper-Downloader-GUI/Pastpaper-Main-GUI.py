@@ -414,8 +414,8 @@ class Ui_MainWindow(QWidget):
     def stop(self):
         self.flag_thread = False
         print('thread stop')
-        QMessageBox.question(None,'提醒', '已取消下载！', QMessageBox.Ok)
-        time.sleep(1)
+        QMessageBox.question(None,'提醒', '已取消下载！请等待三秒！', QMessageBox.Ok)
+        time.sleep(3)
         self.flag_thread = True
         self.single_progressBar.setValue(0)
         self.store_place_bt.setEnabled(True)
