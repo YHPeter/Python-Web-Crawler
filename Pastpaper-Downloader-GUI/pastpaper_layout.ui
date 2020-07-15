@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>PastPaper_Downloader</class>
+ <class>MainWindow</class>
  <widget class="QDialog" name="MainWindow">
   <property name="enabled">
    <bool>true</bool>
@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>517</width>
-    <height>801</height>
+    <width>531</width>
+    <height>799</height>
    </rect>
   </property>
   <property name="cursor">
@@ -73,34 +73,14 @@
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
-      <widget class="QToolButton" name="exam_office">
+      <widget class="QToolButton" name="pre_folder">
        <property name="text">
-        <string>考试局</string>
+        <string>上一级文件夹</string>
        </property>
       </widget>
-      <widget class="QToolButton" name="grade">
+      <widget class="QToolButton" name="open">
        <property name="text">
-        <string>年级</string>
-       </property>
-      </widget>
-      <widget class="QToolButton" name="subject">
-       <property name="text">
-        <string>科目</string>
-       </property>
-      </widget>
-      <widget class="QToolButton" name="year">
-       <property name="text">
-        <string>年份</string>
-       </property>
-      </widget>
-      <widget class="QToolButton" name="month">
-       <property name="text">
-        <string>月份</string>
-       </property>
-      </widget>
-      <widget class="QToolButton" name="component">
-       <property name="text">
-        <string>卷号</string>
+        <string>打开文件夹</string>
        </property>
       </widget>
      </widget>
@@ -108,23 +88,26 @@
     <item row="2" column="0" colspan="2">
      <layout class="QGridLayout" name="gridLayout_2">
       <item row="0" column="1">
-       <widget class="QPushButton" name="start_search">
+       <widget class="QLineEdit" name="display_line">
         <property name="text">
-         <string>GO</string>
+         <string>Home</string>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="QToolButton" name="mutichoose">
+        <property name="text">
+         <string>多选功能</string>
         </property>
        </widget>
       </item>
       <item row="0" column="0">
-       <widget class="QLineEdit" name="lineEdit">
+       <widget class="QLabel" name="current_folder">
         <property name="text">
-         <string>Search component</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="2">
-       <widget class="QToolButton" name="toolButton">
-        <property name="text">
-         <string>多选功能</string>
+         <string>当前文件夹</string>
         </property>
        </widget>
       </item>
@@ -146,19 +129,12 @@
         </property>
        </widget>
       </item>
-      <item>
-       <widget class="QScrollBar" name="verticalScrollBar">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-       </widget>
-      </item>
      </layout>
     </item>
     <item row="5" column="1">
      <widget class="QPushButton" name="download">
       <property name="text">
-       <string>下载所选文件、文件夹</string>
+       <string>下载所选文件 Ctrl+D</string>
       </property>
      </widget>
     </item>

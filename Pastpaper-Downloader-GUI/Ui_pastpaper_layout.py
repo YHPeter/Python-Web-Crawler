@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'c:\Users\peter\Desktop\pastpaper\pastpaper_layout.ui'
+# Form implementation generated from reading ui file 'c:\Users\peter\Desktop\Programming\GitHub\Python-Web-Crawler\Pastpaper-Downloader-GUI\pastpaper_layout.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.0
 #
@@ -11,13 +11,13 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_PastPaper_Downloader(object):
-    def setupUi(self, PastPaper_Downloader):
-        PastPaper_Downloader.setObjectName("PastPaper_Downloader")
-        PastPaper_Downloader.setEnabled(True)
-        PastPaper_Downloader.resize(517, 801)
-        PastPaper_Downloader.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
-        self.layoutWidget = QtWidgets.QWidget(PastPaper_Downloader)
+class Ui_MainWindow(object):
+    def setupUi(self, MainWindow):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.setEnabled(True)
+        MainWindow.resize(531, 799)
+        MainWindow.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
+        self.layoutWidget = QtWidgets.QWidget(MainWindow)
         self.layoutWidget.setGeometry(QtCore.QRect(20, 10, 481, 771))
         self.layoutWidget.setObjectName("layoutWidget")
         self.formLayout = QtWidgets.QFormLayout(self.layoutWidget)
@@ -46,30 +46,23 @@ class Ui_PastPaper_Downloader(object):
         self.splitter = QtWidgets.QSplitter(self.layoutWidget)
         self.splitter.setOrientation(QtCore.Qt.Horizontal)
         self.splitter.setObjectName("splitter")
-        self.exam_office = QtWidgets.QToolButton(self.splitter)
-        self.exam_office.setObjectName("exam_office")
-        self.grade = QtWidgets.QToolButton(self.splitter)
-        self.grade.setObjectName("grade")
-        self.subject = QtWidgets.QToolButton(self.splitter)
-        self.subject.setObjectName("subject")
-        self.year = QtWidgets.QToolButton(self.splitter)
-        self.year.setObjectName("year")
-        self.month = QtWidgets.QToolButton(self.splitter)
-        self.month.setObjectName("month")
-        self.component = QtWidgets.QToolButton(self.splitter)
-        self.component.setObjectName("component")
+        self.pre_folder = QtWidgets.QToolButton(self.splitter)
+        self.pre_folder.setObjectName("pre_folder")
+        self.open = QtWidgets.QToolButton(self.splitter)
+        self.open.setObjectName("open")
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.SpanningRole, self.splitter)
         self.gridLayout_2 = QtWidgets.QGridLayout()
         self.gridLayout_2.setObjectName("gridLayout_2")
-        self.start_search = QtWidgets.QPushButton(self.layoutWidget)
-        self.start_search.setObjectName("start_search")
-        self.gridLayout_2.addWidget(self.start_search, 0, 1, 1, 1)
-        self.lineEdit = QtWidgets.QLineEdit(self.layoutWidget)
-        self.lineEdit.setObjectName("lineEdit")
-        self.gridLayout_2.addWidget(self.lineEdit, 0, 0, 1, 1)
-        self.toolButton = QtWidgets.QToolButton(self.layoutWidget)
-        self.toolButton.setObjectName("toolButton")
-        self.gridLayout_2.addWidget(self.toolButton, 0, 2, 1, 1)
+        self.display_line = QtWidgets.QLineEdit(self.layoutWidget)
+        self.display_line.setReadOnly(True)
+        self.display_line.setObjectName("display_line")
+        self.gridLayout_2.addWidget(self.display_line, 0, 1, 1, 1)
+        self.mutichoose = QtWidgets.QToolButton(self.layoutWidget)
+        self.mutichoose.setObjectName("mutichoose")
+        self.gridLayout_2.addWidget(self.mutichoose, 0, 3, 1, 1)
+        self.current_folder = QtWidgets.QLabel(self.layoutWidget)
+        self.current_folder.setObjectName("current_folder")
+        self.gridLayout_2.addWidget(self.current_folder, 0, 0, 1, 1)
         self.formLayout.setLayout(2, QtWidgets.QFormLayout.SpanningRole, self.gridLayout_2)
         self.progressBar = QtWidgets.QProgressBar(self.layoutWidget)
         self.progressBar.setProperty("value", 100)
@@ -81,10 +74,6 @@ class Ui_PastPaper_Downloader(object):
         self.info.setEnabled(True)
         self.info.setObjectName("info")
         self.horizontalLayout.addWidget(self.info)
-        self.verticalScrollBar = QtWidgets.QScrollBar(self.layoutWidget)
-        self.verticalScrollBar.setOrientation(QtCore.Qt.Vertical)
-        self.verticalScrollBar.setObjectName("verticalScrollBar")
-        self.horizontalLayout.addWidget(self.verticalScrollBar)
         self.formLayout.setLayout(3, QtWidgets.QFormLayout.SpanningRole, self.horizontalLayout)
         self.download = QtWidgets.QPushButton(self.layoutWidget)
         self.download.setObjectName("download")
@@ -93,21 +82,17 @@ class Ui_PastPaper_Downloader(object):
         self.store_place.setObjectName("store_place")
         self.formLayout.setWidget(4, QtWidgets.QFormLayout.FieldRole, self.store_place)
 
-        self.retranslateUi(PastPaper_Downloader)
-        QtCore.QMetaObject.connectSlotsByName(PastPaper_Downloader)
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
-    def retranslateUi(self, PastPaper_Downloader):
+    def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        PastPaper_Downloader.setWindowTitle(_translate("PastPaper_Downloader", "PastPaper_Downloader"))
-        self.label.setText(_translate("PastPaper_Downloader", "Pastpaper 下载器"))
-        self.exam_office.setText(_translate("PastPaper_Downloader", "考试局"))
-        self.grade.setText(_translate("PastPaper_Downloader", "年级"))
-        self.subject.setText(_translate("PastPaper_Downloader", "科目"))
-        self.year.setText(_translate("PastPaper_Downloader", "年份"))
-        self.month.setText(_translate("PastPaper_Downloader", "月份"))
-        self.component.setText(_translate("PastPaper_Downloader", "卷号"))
-        self.start_search.setText(_translate("PastPaper_Downloader", "GO"))
-        self.lineEdit.setText(_translate("PastPaper_Downloader", "Search component"))
-        self.toolButton.setText(_translate("PastPaper_Downloader", "多选功能"))
-        self.download.setText(_translate("PastPaper_Downloader", "下载所选文件、文件夹"))
-        self.store_place.setText(_translate("PastPaper_Downloader", "文件储存位置"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "PastPaper_Downloader"))
+        self.label.setText(_translate("MainWindow", "Pastpaper 下载器"))
+        self.pre_folder.setText(_translate("MainWindow", "上一级文件夹"))
+        self.open.setText(_translate("MainWindow", "打开文件夹"))
+        self.display_line.setText(_translate("MainWindow", "Home"))
+        self.mutichoose.setText(_translate("MainWindow", "多选功能"))
+        self.current_folder.setText(_translate("MainWindow", "当前文件夹"))
+        self.download.setText(_translate("MainWindow", "下载所选文件 Ctrl+D"))
+        self.store_place.setText(_translate("MainWindow", "文件储存位置"))
