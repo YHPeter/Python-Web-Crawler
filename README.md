@@ -12,7 +12,9 @@
 ~~At the same time, user needs to click the bat file to combine all the single txt files in each independent folders in a different situation.~~ The least version have mixed the combing function without clicking the bat file.
 8. As the influence of COVID-19, the updated announcement is related to every candidate who signed for the summer exam. This program aims to get the updated news from <https://www.cambridgeinternational.org/news/> every minute and send the new URL to our emails via **SMTP email**. I have **deployed to the server**, the more details in the folder. [CAIE-Notification](https://github.com/YHPeter/Python-Web-Crawler/tree/master/CAIE-Notification-via-SMTP-Email)
 9. Pastpapaer-Downloader-GUI: This application is designed for ***A-Level and GCSE*** students to get the full subjects pastpaper resource. This software captures this website: [Pastpapers.co](https://pastpapers.co) and display on the mainwindow by **PyQt5** and requests. Functions includes downloading files or several folders(deeper three folders), opening files or folders in a browser or local. When clicking the download button, it creates a new thread to download all files or several folders(deeper three folders), so mianwindow still can do actions smoothly. Tips: Every button has its own hotkeys, it will incredibly increase efficiency.
-10. This project is a web crawler for a company background system. Sensitive information has been hidden. ***It is difficult to save the cookie and keep session with requests*** on this website. Therefore, I used the **selenium** to simulate the user login in, then used get() method to get HTML version JSON data and cleaned data.## Basic tools
+10. This project is a web crawler for a company background system. Sensitive information has been hidden. ***It is difficult to save the cookie and keep session with requests*** on this website. Therefore, I used the **selenium** to simulate the user login in, then used get() method to get HTML version JSON data and cleaned data.
+
+## Basic tools
 
 The basic and essential function is in the get https website.py file, which can get the https website normally.
 
